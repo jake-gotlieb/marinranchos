@@ -202,39 +202,6 @@
             color: #1565c0;
             margin-bottom: 5px;
         }
-
-        .map-controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .control-button {
-            display: block;
-            width: 100%;
-            margin: 5px 0;
-            padding: 8px 15px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .control-button:hover {
-            background: #5a67d8;
-        }
-
-        .opacity-slider {
-            width: 150px;
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
@@ -259,13 +226,6 @@
         <div class="main-content">
             <div class="map-container">
                 <div id="map"></div>
-                <div class="map-controls">
-                    <button id="toggleHistorical" class="control-button">Toggle Historical Map</button>
-                    <label for="opacitySlider" style="font-size: 12px; color: #333;">Historical Map Opacity:</label>
-                    <input type="range" id="opacitySlider" class="opacity-slider" min="0" max="100" value="70">
-                    <button id="drawPolygon" class="control-button">Draw New Region</button>
-                    <button id="exportCoords" class="control-button">Export Coordinates</button>
-                </div>
             </div>
             
             <div class="info-panel">
@@ -287,20 +247,15 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <script>
         let map;
         let regions = [];
         let currentMarker;
         let historicalOverlay;
-        let drawControl;
-        let drawnItems;
 
         // Sample region data with polygons centered around NYC
         const regionData = {
             'Manhattan Downtown': {
-                // Complex polygon with many points (realistic property boundary)
                 coordinates: [
                     [40.7589, -73.9851], [40.7585, -73.9845], [40.7580, -73.9848],
                     [40.7575, -73.9852], [40.7570, -73.9855], [40.7565, -73.9860],
@@ -411,26 +366,6 @@
                 maxZoom: 19
             }).addTo(map);
 
-            // Initialize drawing tools
-            drawnItems = new L.FeatureGroup();
-            map.addLayer(drawnItems);
-
-            drawControl = new L.Control.Draw({
-                edit: {
-                    featureGroup: drawnItems
-                },
-                draw: {
-                    polygon: true,
-                    polyline: false,
-                    circle: false,
-                    rectangle: false,
-                    marker: false,
-                    circlemarker: false
-                }
-            });
-
-            // Add historical map overlay (replace with your historical map URL)
-            // This should be georeferenced to match the current coordinates
             const historicalBounds = [
                 [40.7400, -74.0100], // Southwest corner
                 [40.7700, -73.9700]  // Northeast corner
@@ -438,7 +373,7 @@
             
             // Replace this URL with your historical map image
             historicalOverlay = L.imageOverlay(
-                'https://via.placeholder.com/800x600/8B4513/FFFFFF?text=Historical+Map+Overlay',
+                '/RanchoMap1860Stanford.tif',
                 historicalBounds,
                 {
                     opacity: 0.7,
@@ -474,27 +409,6 @@
                     direction: 'center'
                 });
             });
-
-            // Event handlers for drawing
-            map.on(L.Draw.Event.CREATED, function(event) {
-                const layer = event.layer;
-                drawnItems.addLayer(layer);
-                
-                // Get coordinates of drawn polygon
-                if (layer instanceof L.Polygon) {
-                    const coords = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
-                    console.log('New polygon coordinates:', JSON.stringify(coords, null, 2));
-                    
-                    // Show coordinates in info panel
-                    showDrawnPolygonInfo(coords);
-                }
-            });
-
-            // Control buttons
-            document.getElementById('toggleHistorical').addEventListener('click', toggleHistoricalMap);
-            document.getElementById('opacitySlider').addEventListener('input', updateOpacity);
-            document.getElementById('drawPolygon').addEventListener('click', toggleDrawMode);
-            document.getElementById('exportCoords').addEventListener('click', exportAllCoordinates);
 
             // Search functionality
             document.getElementById('searchBtn').addEventListener('click', searchAddress);
@@ -611,101 +525,6 @@
                 </div>
                 <div class="info-text">${info.features}</div>
             `;
-        }
-
-        function toggleHistoricalMap() {
-            if (map.hasLayer(historicalOverlay)) {
-                map.removeLayer(historicalOverlay);
-                document.getElementById('toggleHistorical').textContent = 'Show Historical Map';
-            } else {
-                map.addLayer(historicalOverlay);
-                document.getElementById('toggleHistorical').textContent = 'Hide Historical Map';
-            }
-        }
-
-        function updateOpacity() {
-            const opacity = document.getElementById('opacitySlider').value / 100;
-            historicalOverlay.setOpacity(opacity);
-        }
-
-        function toggleDrawMode() {
-            if (map.hasControl(drawControl)) {
-                map.removeControl(drawControl);
-                document.getElementById('drawPolygon').textContent = 'Draw New Region';
-            } else {
-                map.addControl(drawControl);
-                document.getElementById('drawPolygon').textContent = 'Stop Drawing';
-            }
-        }
-
-        function exportAllCoordinates() {
-            const allCoords = {};
-            
-            // Export existing regions
-            regions.forEach(region => {
-                allCoords[region.name] = region.data.coordinates;
-            });
-            
-            // Export drawn polygons
-            let drawnCount = 0;
-            drawnItems.eachLayer(layer => {
-                if (layer instanceof L.Polygon) {
-                    drawnCount++;
-                    const coords = layer.getLatLngs()[0].map(point => [point.lat, point.lng]);
-                    allCoords[`Drawn Region ${drawnCount}`] = coords;
-                }
-            });
-            
-            console.log('All coordinates:', JSON.stringify(allCoords, null, 2));
-            
-            // Show in info panel
-            showCoordinateExport(allCoords);
-        }
-
-        function showDrawnPolygonInfo(coordinates) {
-            const infoContent = document.getElementById('infoContent');
-            
-            infoContent.innerHTML = `
-                <div class="info-title">New Polygon Drawn</div>
-                <div class="info-text">You've successfully drawn a new polygon with ${coordinates.length} points.</div>
-                <div class="info-text">Coordinates have been logged to the browser console. You can copy them from there.</div>
-                <div class="region-stats">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Polygon Details</h3>
-                    <div class="stat-item">
-                        <span class="stat-label">Number of Points:</span>
-                        <span class="stat-value">${coordinates.length}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">First Point:</span>
-                        <span class="stat-value">[${coordinates[0][0].toFixed(6)}, ${coordinates[0][1].toFixed(6)}]</span>
-                    </div>
-                </div>
-                <div class="info-text">
-                    <strong>Tip:</strong> Open your browser's developer console (F12) to see the full coordinates array that you can copy and paste into your code.
-                </div>
-            `;
-        }
-
-        function showCoordinateExport(allCoords) {
-            const infoContent = document.getElementById('infoContent');
-            const coordCount = Object.keys(allCoords).length;
-            
-            infoContent.innerHTML = `
-                <div class="info-title">Coordinates Export</div>
-                <div class="info-text">Exported coordinates for ${coordCount} regions to browser console.</div>
-                <div class="info-text">Open Developer Console (F12) to view and copy the coordinate data.</div>
-                <div class="region-stats">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Export Summary</h3>
-                    ${Object.keys(allCoords).map(name => `
-                        <div class="stat-item">
-                            <span class="stat-label">${name}:</span>
-                            <span class="stat-value">${allCoords[name].length} points</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="info-text">
-                    <strong>Usage:</strong> Copy the logged JSON from console and paste it into your regionData object in the code.
-                </div>
         }
 
         function showLoading() {
