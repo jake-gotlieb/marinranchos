@@ -214,12 +214,8 @@
         <div class="search-container">
             <div class="search-box">
                 <input type="text" id="addressInput" class="search-input" 
-                       placeholder="Enter an address (e.g., Times Square, New York)">
+                       placeholder="Enter an address (e.g., 1125 B St, San Rafael)">
                 <button id="searchBtn" class="search-btn">Search</button>
-            </div>
-            <div class="search-suggestion">
-                <div class="suggestion-title">Try these sample addresses:</div>
-                Times Square New York, Central Park NYC, Brooklyn Bridge NY, Wall Street New York
             </div>
         </div>
         
@@ -230,16 +226,16 @@
             
             <div class="info-panel">
                 <div class="info-content" id="infoContent">
-                    <div class="info-title">Welcome to Regional Explorer</div>
+                    <div class="info-title">Welcome to </div>
                     <div class="info-text">
-                        Enter an address in the search box above to discover which region it belongs to. 
-                        The map shows different colored regions, each with unique characteristics and information.
+                        Enter any address in Marin into the search box above to discover which rancho used to exist there. 
+                        The map shows the original ranchos of Marin with detailed information about them all.
                     </div>
                     <div class="info-text">
-                        Click on any colored region or search for an address to get detailed information!
+                        Click on any rancho or search for an address to get detailed information!
                     </div>
                     <div class="info-text">
-                        This system uses free OpenStreetMap data and requires no API keys or subscriptions.
+                        This system uses free OpenStreetMap data integrated using Leaflet.
                     </div>
                 </div>
             </div>
@@ -358,7 +354,7 @@
 
         function initMap() {
             // Initialize map centered on NYC
-            map = L.map('map').setView([40.7505, -73.9829], 14);
+            map = L.map('map').setView([38.0834, 122.7633], 14);
 
             // Add OpenStreetMap tile layer (completely free)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
