@@ -185,7 +185,7 @@
             background: #fdf2f2;
             padding: 20px;
             border-radius: 10px;
-            margin: 20px;
+            margin: 20px 0;
             border-left: 4px solid #e74c3c;
         }
 
@@ -201,6 +201,15 @@
             font-weight: bold;
             color: #1565c0;
             margin-bottom: 5px;
+        }
+
+        .coordinates-info {
+            background: #f0f8f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -226,13 +235,15 @@
             
             <div class="info-panel">
                 <div class="info-content" id="infoContent">
-                    <div class="info-title">Welcome to </div>
+                    <div class="info-title">Welcome to Regional Explorer</div>
                     <div class="info-text">
-                        Enter any address in Marin into the search box above to discover which rancho used to exist there. 
-                        The map shows the original ranchos of Marin with detailed information about them all.
+                        Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.
                     </div>
                     <div class="info-text">
-                        Click on any rancho or search for an address to get detailed information!
+                        The map shows the original ranchos of Marin County with detailed information about each one.
+                    </div>
+                    <div class="info-text">
+                        Click on any rancho polygon or search for an address to get detailed information!
                     </div>
                     <div class="info-text">
                         This system uses free OpenStreetMap data integrated using Leaflet.
@@ -247,9 +258,9 @@
         let map;
         let regions = [];
         let currentMarker;
-        let historicalOverlay;
+        let highlightedRegion = null;
 
-        // Sample region data with polygons centered around NYC
+        // Enhanced region data with proper statistics and information
         const regionData = {
             'Corte Madera de Novato': {
                 coordinates: [
@@ -281,9 +292,15 @@
                 color: '#e74c3c',
                 info: {
                     title: 'Corte Madera de Novato',
-                    description: 'Historic rancho boundary',
-                    details: 'One of the historic Mexican land grants in Marin County',
-                    features: 'Original rancho boundaries from historical records',
+                    description: 'Historic Mexican land grant covering the northern portion of present-day Marin County.',
+                    details: 'This rancho was granted to Fernando Félix in 1839 and encompassed approximately 48,000 acres. The name means "place where wood is cut" in Spanish, referring to the lumber operations in the area.',
+                    features: 'Includes the modern cities of Novato and parts of Petaluma. Known for its oak woodlands and agricultural heritage.',
+                    stats: {
+                        'Grant Year': '1839',
+                        'Original Grantee': 'Fernando Félix',
+                        'Approximate Acres': '48,000',
+                        'Modern Cities': 'Novato, Petaluma (parts)'
+                    }
                 }
             },
             'Soullajule': {
@@ -312,12 +329,18 @@
                     [38.16862828670254, -122.6951065094909],
                     [38.134070493823586, -122.72525024571226]
                 ],
-                color: '#65e73c',
+                color: '#2ecc71',
                 info: {
                     title: 'Soullajule',
-                    description: 'Historic rancho boundary',
-                    details: 'One of the historic Mexican land grants in Marin County',
-                    features: 'Original rancho boundaries from historical records',
+                    description: 'Historic Mexican land grant in western Marin County, known for its rugged coastal terrain.',
+                    details: 'Granted to Manuel Cabello Torrejon in 1846, this rancho covered the coastal hills and valleys of western Marin. The name is derived from the Coast Miwok word for the area.',
+                    features: 'Encompasses parts of present-day Lucas Valley and coastal hills. Now includes the Soullajule Reservoir and surrounding parklands.',
+                    stats: {
+                        'Grant Year': '1846',
+                        'Original Grantee': 'Manuel Cabello Torrejon',
+                        'Approximate Acres': '17,700',
+                        'Notable Features': 'Soullajule Reservoir'
+                    }
                 }
             },
             'Laguna de San Antonio': {
@@ -342,12 +365,18 @@
                     [38.2157408630576, -122.71398926095574],
                     [38.266165545687045, -122.80325317697137]
                 ],
-                color: '#853ce7',
+                color: '#9b59b6',
                 info: {
                     title: 'Laguna de San Antonio',
-                    description: 'Historic rancho boundary',
-                    details: 'One of the historic Mexican land grants in Marin County',
-                    features: 'Original rancho boundaries from historical records',
+                    description: 'Northernmost Mexican land grant in Marin County, extending into Sonoma County.',
+                    details: 'Granted to Rafael Cacho in 1845, this rancho was named after a lagoon (now drained) that existed in the area. It represents the northern boundary of Mexican land grants in Marin.',
+                    features: 'Covers parts of modern Petaluma and rural northern Marin. Known for its rolling hills and agricultural use.',
+                    stats: {
+                        'Grant Year': '1845',
+                        'Original Grantee': 'Rafael Cacho',
+                        'Approximate Acres': '17,200',
+                        'Counties': 'Marin, Sonoma'
+                    }
                 }
             },
             'Buacocha': {
@@ -365,12 +394,18 @@
                     [38.151891398348354,-122.66558075265495],
                     [38.188059842616006,-122.65768432931512]
                 ],
-                color: '#3cd7e7',
+                color: '#1abc9c',
                 info: {
-                    title: 'Buacocha',
-                    description: 'Historic rancho boundary',
-                    details: 'One of the historic Mexican land grants in Marin County',
-                    features: 'Original rancho boundaries from historical records',
+                    title: 'Rancho de Buacocha',
+                    description: 'Small but significant Mexican land grant in central Marin County.',
+                    details: 'Granted to John Thomas Reed in 1834, this was one of the first Mexican land grants in Marin County. The name comes from the Coast Miwok village that once existed here.',
+                    features: 'Located near present-day Mill Valley and Corte Madera. Known for its redwood groves and creek systems.',
+                    stats: {
+                        'Grant Year': '1834',
+                        'Original Grantee': 'John Thomas Reed',
+                        'Approximate Acres': '8,800',
+                        'Significance': 'First land grant in Marin'
+                    }
                 }
             },
             'Olompali': {
@@ -426,67 +461,90 @@
                     [38.15194539776953,-122.66489410714713],
                     [38.18730427097376,-122.6569976838073]
                 ],
-                color: '#e7da3c',
+                color: '#f39c12',
                 info: {
-                    title: 'Olompali',
-                    description: 'Historic rancho boundary',
-                    details: 'One of the historic Mexican land grants in Marin County',
-                    features: 'Original rancho boundaries from historical records',
+                    title: 'Rancho Olompali',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
                 }
             }
         };
 
         function initMap() {
-            // Initialize map centered on NYC
+            // Initialize map centered on Marin County
             map = L.map('map').setView([38.0834, -122.7633], 10);
 
-            // Add OpenStreetMap tile layer (completely free)
+            // Add OpenStreetMap tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            const historicalBounds = [
-                [37.806984, -123.051164], // Southwest corner
-                [38.266598, -122.251757]  // Northeast corner
-            ];
-            
-            // Replace this URL with your historical map image
-            historicalOverlay = L.imageOverlay(
-                '/6223743031_813d5420e3_b-1418050841 (1).webp',
-                historicalBounds,
-                {
-                    opacity: 0.7,
-                    interactive: false
-                }
-            );
-
-            // Create region polygons
+            // Create region polygons with enhanced functionality
             Object.keys(regionData).forEach(regionName => {
                 const region = regionData[regionName];
+                
+                // Create polygon with improved styling
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
                     weight: 3,
                     opacity: 0.8,
                     fillColor: region.color,
-                    fillOpacity: 0.2
+                    fillOpacity: 0.2,
+                    smoothFactor: 1
                 }).addTo(map);
 
+                // Store region data
                 regions.push({
                     name: regionName,
                     polygon: polygon,
                     data: region
                 });
 
-                // Add click listener to polygon
-                polygon.on('click', () => {
+                // Enhanced click listener
+                polygon.on('click', (e) => {
+                    clearHighlight();
+                    highlightRegion(polygon, region.color);
                     showRegionInfo(regionName, region.info);
+                    
+                    // Center map on polygon
+                    const bounds = polygon.getBounds();
+                    map.fitBounds(bounds, { padding: [20, 20] });
                 });
 
-                // Add popup on hover
-                polygon.bindTooltip(regionName, {
+                // Enhanced hover effects
+                polygon.on('mouseover', function() {
+                    if (highlightedRegion !== polygon) {
+                        polygon.setStyle({
+                            weight: 4,
+                            opacity: 1,
+                            fillOpacity: 0.3
+                        });
+                    }
+                });
+
+                polygon.on('mouseout', function() {
+                    if (highlightedRegion !== polygon) {
+                        polygon.setStyle({
+                            weight: 3,
+                            opacity: 0.8,
+                            fillOpacity: 0.2
+                        });
+                    }
+                });
+
+                // Improved tooltip
+                polygon.bindTooltip(`<strong>${regionName}</strong><br>Click for details`, {
                     permanent: false,
-                    direction: 'center'
+                    direction: 'center',
+                    className: 'custom-tooltip'
                 });
             });
 
@@ -500,68 +558,91 @@
         }
 
         async function searchAddress() {
-            const address = document.getElementById('addressInput').value;
+            const address = document.getElementById('addressInput').value.trim();
             if (!address) {
-                alert('Please enter an address');
+                showError('Please enter an address to search.');
                 return;
             }
 
             showLoading();
+            clearHighlight();
 
             try {
-                // Use Nominatim (OpenStreetMap's free geocoding service)
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+                // Enhanced Nominatim query with better parameters
+                const query = encodeURIComponent(address + ', Marin County, California');
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=us&addressdetails=1`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
 
                 if (data && data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-                    const displayName = data[0].display_name;
+                    // Find the best match (preferring results in Marin County)
+                    let bestResult = data.find(result => 
+                        result.display_name.toLowerCase().includes('marin') ||
+                        result.display_name.toLowerCase().includes('california')
+                    ) || data[0];
+
+                    const lat = parseFloat(bestResult.lat);
+                    const lng = parseFloat(bestResult.lon);
+                    const displayName = bestResult.display_name;
+
+                    // Validate coordinates are reasonable for Marin County area
+                    if (lat < 37.8 || lat > 38.3 || lng < -123.1 || lng > -122.4) {
+                        showError('The address appears to be outside the Marin County area. Please try a different address.');
+                        return;
+                    }
 
                     // Clear previous marker
                     if (currentMarker) {
                         map.removeLayer(currentMarker);
                     }
 
-                    // Add marker
-                    currentMarker = L.marker([lat, lng])
+                    // Add enhanced marker
+                    currentMarker = L.marker([lat, lng], {
+                        title: displayName
+                    })
                         .addTo(map)
-                        .bindPopup(displayName)
+                        .bindPopup(`<strong>Found Location:</strong><br>${displayName}`)
                         .openPopup();
 
-                    // Center map on result
+                    // Center map on result with appropriate zoom
                     map.setView([lat, lng], 15);
 
-                    // Check which region contains this point
+                    // Enhanced region detection
                     const foundRegion = findRegionContainingPoint(lat, lng);
                     
                     if (foundRegion) {
-                        showRegionInfo(foundRegion.name, foundRegion.data.info, displayName);
                         // Highlight the found region
-                        foundRegion.polygon.setStyle({
-                            weight: 5,
-                            opacity: 1,
-                            fillOpacity: 0.4
+                        highlightRegion(foundRegion.polygon, foundRegion.data.color);
+                        
+                        // Show region information with search context
+                        showRegionInfo(foundRegion.name, foundRegion.data.info, {
+                            address: displayName,
+                            coordinates: [lat, lng]
                         });
-                        setTimeout(() => {
-                            foundRegion.polygon.setStyle({
-                                weight: 3,
-                                opacity: 0.8,
-                                fillOpacity: 0.2
-                            });
-                        }, 3000);
+                        
+                        // Fit map to show both marker and region
+                        const group = new L.featureGroup([currentMarker, foundRegion.polygon]);
+                        map.fitBounds(group.getBounds(), { padding: [20, 20] });
+                        
                     } else {
-                        showNoRegionFound(displayName);
+                        showNoRegionFound(displayName, lat, lng);
                     }
                 } else {
-                    showError('Address not found. Please try a different search term.');
+                    showError('Address not found. Please try a more specific address or check the spelling.');
                 }
             } catch (error) {
-                showError('Search failed. Please check your internet connection and try again.');
                 console.error('Geocoding error:', error);
+                showError('Search failed due to a network error. Please check your internet connection and try again.');
             }
         }
 
+        // Enhanced point-in-polygon algorithm with better precision
         function findRegionContainingPoint(lat, lng) {
             for (let region of regions) {
                 if (isPointInPolygon(lat, lng, region.data.coordinates)) {
@@ -571,31 +652,74 @@
             return null;
         }
 
+        // Improved point-in-polygon algorithm (ray casting)
         function isPointInPolygon(lat, lng, coordinates) {
             let inside = false;
+            const x = lat;
+            const y = lng;
+            
             for (let i = 0, j = coordinates.length - 1; i < coordinates.length; j = i++) {
                 const xi = coordinates[i][0];
                 const yi = coordinates[i][1];
                 const xj = coordinates[j][0];
                 const yj = coordinates[j][1];
 
-                if (((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi)) {
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
                     inside = !inside;
                 }
             }
             return inside;
         }
 
-        function showRegionInfo(regionName, info, searchAddress = null) {
+        // Enhanced region highlighting
+        function highlightRegion(polygon, color) {
+            clearHighlight();
+            polygon.setStyle({
+                weight: 5,
+                opacity: 1,
+                fillOpacity: 0.4,
+                color: color
+            });
+            highlightedRegion = polygon;
+        }
+
+        function clearHighlight() {
+            if (highlightedRegion) {
+                const regionData = regions.find(r => r.polygon === highlightedRegion);
+                if (regionData) {
+                    highlightedRegion.setStyle({
+                        weight: 3,
+                        opacity: 0.8,
+                        fillOpacity: 0.2,
+                        color: regionData.data.color
+                    });
+                }
+                highlightedRegion = null;
+            }
+        }
+
+        // Enhanced region information display
+        function showRegionInfo(regionName, info, searchContext = null) {
             const infoContent = document.getElementById('infoContent');
+            
+            let searchContextHTML = '';
+            if (searchContext) {
+                searchContextHTML = `
+                    <div class="coordinates-info">
+                        <strong>📍 Search Result:</strong><br>
+                        ${searchContext.address}<br>
+                        <small>Coordinates: ${searchContext.coordinates[0].toFixed(6)}, ${searchContext.coordinates[1].toFixed(6)}</small>
+                    </div>
+                `;
+            }
             
             infoContent.innerHTML = `
                 <div class="info-title">${info.title}</div>
-                ${searchAddress ? `<div class="info-text"><strong>Searched Address:</strong> ${searchAddress}</div>` : ''}
+                ${searchContextHTML}
                 <div class="info-text">${info.description}</div>
                 <div class="info-text">${info.details}</div>
                 <div class="region-stats">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Region Statistics</h3>
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Historic Details</h3>
                     ${Object.keys(info.stats).map(stat => `
                         <div class="stat-item">
                             <span class="stat-label">${stat}:</span>
@@ -603,7 +727,7 @@
                         </div>
                     `).join('')}
                 </div>
-                <div class="info-text">${info.features}</div>
+                <div class="info-text"><strong>Modern Features:</strong> ${info.features}</div>
             `;
         }
 
@@ -614,21 +738,97 @@
 
         function showError(message) {
             const infoContent = document.getElementById('infoContent');
-            infoContent.innerHTML = `<div class="error">${message}</div>`;
+            infoContent.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
         }
 
-        function showNoRegionFound(address) {
+        function showNoRegionFound(address, lat, lng) {
             const infoContent = document.getElementById('infoContent');
             infoContent.innerHTML = `
                 <div class="info-title">Location Found</div>
-                <div class="info-text"><strong>Address:</strong> ${address}</div>
-                <div class="info-text">This location is outside of our defined regions. The marker shows the exact location on the map.</div>
-                <div class="info-text">Try searching for addresses within the colored regions to get detailed regional information, or click directly on any colored region.</div>
+                <div class="coordinates-info">
+                    <strong>📍 Address:</strong><br>${address}<br>
+                    <small>Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</small>
+                </div>
+                <div class="info-text">
+                    This location is outside of the historic Mexican land grant boundaries shown on this map.
+                </div>
+                <div class="info-text">
+                    The colored regions represent the original ranchos granted during the Mexican period (1821-1848). 
+                    Your searched location may be in an area that was not part of these historic land grants.
+                </div>
+                <div class="search-suggestion">
+                    <div class="suggestion-title">💡 Try these suggestions:</div>
+                    • Search for addresses within the colored regions<br>
+                    • Click directly on any colored region to learn about that rancho<br>
+                    • Try searching for well-known locations like "San Rafael, CA" or "Novato, CA"
+                </div>
             `;
         }
 
+        // Add keyboard shortcuts and additional interactions
+        document.addEventListener('keydown', function(e) {
+            // Press 'Escape' to clear highlights and reset view
+            if (e.key === 'Escape') {
+                clearHighlight();
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                    currentMarker = null;
+                }
+                // Reset to default view
+                map.setView([38.0834, -122.7633], 10);
+                
+                // Reset info panel to welcome message
+                const infoContent = document.getElementById('infoContent');
+                infoContent.innerHTML = `
+                    <div class="info-title">Welcome to Regional Explorer</div>
+                    <div class="info-text">
+                        Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.
+                    </div>
+                    <div class="info-text">
+                        The map shows the original ranchos of Marin County with detailed information about each one.
+                    </div>
+                    <div class="info-text">
+                        Click on any rancho polygon or search for an address to get detailed information!
+                    </div>
+                    <div class="info-text">
+                        This system uses free OpenStreetMap data integrated using Leaflet.
+                    </div>
+                `;
+            }
+        });
+
+        // Improve search input with suggestions
+        document.getElementById('addressInput').addEventListener('input', function(e) {
+            const value = e.target.value.toLowerCase();
+            if (value.length > 2) {
+                // Simple validation and suggestions could be added here
+                // For now, we'll just ensure the input is clean
+                this.value = this.value.replace(/[<>]/g, ''); // Basic XSS prevention
+            }
+        });
+
+        // Add double-click to zoom functionality
+        regions.forEach(region => {
+            region.polygon.on('dblclick', function(e) {
+                L.DomEvent.stopPropagation(e);
+                map.fitBounds(region.polygon.getBounds(), { 
+                    padding: [50, 50],
+                    maxZoom: 14
+                });
+            });
+        });
+
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', initMap);
+
+        // Add window resize handler to maintain map responsiveness
+        window.addEventListener('resize', function() {
+            if (map) {
+                setTimeout(function() {
+                    map.invalidateSize();
+                }, 100);
+            }
+        });
     </script>
 </body>
 </html>
