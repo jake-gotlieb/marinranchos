@@ -1396,7 +1396,7 @@
         // Enhanced region information display
         function showRegionInfo(regionName, info, searchContext = null) {
             const infoContent = document.getElementById('infoContent');
-            const description = (info.description?.[currentLang] || '').replace(/\n/g, '<br><br>');
+            const description = (region.info.description?.[currentLang] || '').replace(/\n/g, '<br><br>');
             
             let searchContextHTML = '';
             if (searchContext) {
@@ -1422,7 +1422,7 @@
                         </div>
                     `).join('')}
                 </div>
-                <div class="info-text">${info.description?.[currentLang] || ''}</div>
+                <div class="info-text">${description}</div>
             `;
         }
 
