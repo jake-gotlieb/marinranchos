@@ -114,10 +114,19 @@
             background: white;
             border-left: 1px solid #e9ecef;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-controls {
+            padding: 10px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
         }
         
         .info-content {
             padding: 30px;
+            flex-grow: 1;
         }
         
         .info-title {
@@ -148,6 +157,10 @@
             margin-bottom: 10px;
             padding: 5px 0;
             border-bottom: 1px solid #e9ecef;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
         }
         
         .stat-label {
@@ -189,20 +202,6 @@
             border-left: 4px solid #e74c3c;
         }
 
-        .search-suggestion {
-            background: #e3f2fd;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border-left: 4px solid #2196f3;
-        }
-        
-        .suggestion-title {
-            font-weight: bold;
-            color: #1565c0;
-            margin-bottom: 5px;
-        }
-
         .coordinates-info {
             background: #f0f8f0;
             padding: 15px;
@@ -234,162 +233,72 @@
             </div>
             
             <div class="info-panel">
-                <div style="padding:10px; text-align:right;">
+                <div class="info-controls">
                     <button id="langToggle">ES</button>
                 </div>
                 <div class="info-content" id="infoContent">
-                    <div class="info-title">Welcome to Address to Rancho</div>
-                    <div class="info-text">
-                        Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.
                     </div>
-                    <div class="info-text">
-                        The map shows the original ranchos of Marin County with detailed information about each one.
-                    </div>
-                    <div class="info-text">
-                        Click on any rancho polygon or search for an address to get detailed information!
-                    </div>
-                    <div class="info-text">
-                        This system uses free OpenStreetMap data integrated using Leaflet.
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
+        // App state variables
         let map;
         let regions = [];
         let currentMarker;
-        let highlightedRegion = null;
-        let imageOverlay;
+        let highlightedRegionPolygon = null;
+        let highlightedRegionName = null;
         let currentLang = 'en';
 
-        // Enhanced region data with proper statistics and information
+        // --- DATA ---
+        // FIX: Standardized the data structure. All entries now have a consistent format
+        // with 'en' and 'es' keys for title, description, and stats. This prevents runtime errors.
+        // NOTE: For a real application, this data should be in a separate JSON file.
         const regionData = {
             'Corte Madera de Novato': {
-                coordinates: [
-                    [38.168250396984384, -122.69407654122918],
-                    [38.13396247671964, -122.72497558908073],
-                    [38.12045887373562, -122.7016296418151],
-                    [38.112355513009696, -122.7016296418151],
-                    [38.11208538550022, -122.69407654122918],
-                    [38.111274996977635, -122.68824005441276],
-                    [38.1066826255182, -122.6848068268737],
-                    [38.10560202557017, -122.67759704904168],
-                    [38.102630293298475, -122.67382049874871],
-                    [38.102630293298475, -122.65871429757682],
-                    [38.10587217705566, -122.65356445626824],
-                    [38.104791565119946, -122.63227844552605],
-                    [38.10803335297616, -122.63227844552605],
-                    [38.110464599463874, -122.62712860421745],
-                    [38.120999065813564, -122.62678528146354],
-                    [38.12153925389513, -122.63021850900262],
-                    [38.136122821387204, -122.63021850900262],
-                    [38.139093190885205, -122.63605499581902],
-                    [38.14557357737077, -122.63365173654168],
-                    [38.15016350287313, -122.64189148263542],
-                    [38.14692358543955, -122.65459442452996],
-                    [38.15124344337197, -122.66626739816276],
-                    [38.1496235266276, -122.67450714425652],
-                    [38.168250396984384, -122.69407654122918]
-                ],
+                coordinates: [[38.168250396984384,-122.69407654122918],[38.13396247671964,-122.72497558908073],[38.12045887373562,-122.7016296418151],[38.112355513009696,-122.7016296418151],[38.11208538550022,-122.69407654122918],[38.111274996977635,-122.68824005441276],[38.1066826255182,-122.6848068268737],[38.10560202557017,-122.67759704904168],[38.102630293298475,-122.67382049874871],[38.102630293298475,-122.65871429757682],[38.10587217705566,-122.65356445626824],[38.104791565119946,-122.63227844552605],[38.10803335297616,-122.63227844552605],[38.110464599463874,-122.62712860421745],[38.120999065813564,-122.62678528146354],[38.12153925389513,-122.63021850900262],[38.136122821387204,-122.63021850900262],[38.139093190885205,-122.63605499581902],[38.14557357737077,-122.63365173654168],[38.15016350287313,-122.64189148263542],[38.14692358543955,-122.65459442452996],[38.15124344337197,-122.66626739816276],[38.1496235266276,-122.67450714425652],[38.168250396984384,-122.69407654122918]],
                 color: '#e74c3c',
                 info: {
-                    title: 'Corte Madera de Novato',
+                    title: { en: 'Corte Madera de Novato', es: 'Corte Madera de Novato' },
                     stats: {
-                        en: {
-                            'Grant Date': 'October 2, 1834',
-                            'Original Grantee': 'John Reed',
-                            'Size': '4460.24 acres',
-                            'Governor': 'Jose Figuero',
-                        },
-                        es: {
-                            'Fecha de la concesión': '2 de octubre de 1834',
-                            'Beneficiario original': 'Juan Reed',
-                            'Tamaño': '4460,24 acres',
-                            'Gobernador': 'José Figuero',
-                        }
+                        en: { 'Grant Date': 'October 2, 1834', 'Original Grantee': 'John Reed', 'Size': '4460.24 acres', 'Governor': 'Jose Figueroa' },
+                        es: { 'Fecha de Concesión': '2 de octubre de 1834', 'Beneficiario Original': 'John Reed', 'Tamaño': '4460,24 acres', 'Gobernador': 'José Figueroa' }
                     },
                     description: {
-                        en: 'At the age of 15, John Reed left Dublin, Ireland, with a seafaring uncle, and made his way to Acapulco, Mexico. In 1825, Reed boarded a Mexican vessel and sailed along the California coast—stopping briefly at Los Angeles—and, in 1826, like William Richardson before him, parted company with his shipmates at Yerba Buena. Upon his arrival in the Bay Area, he built a dwelling in Sausalito and applied to the governor for a land grant in the area. His request having been denied, he traveled north and set up a ranch in what is now Cotati. After an Indian tribe burned his grain, he came back to Sausalito in 1832. He established a ferry service on the bay, which he used, among other things, to transport barrels of spring water from Sausalito to Yerba Buena. \n In 1834, Governor Figueroa awarded him the first land grant in Marin, Rancho Corte Madera del Presidio—consisting of nearly 5000 acres. On his new rancho, Reed built a sawmill (the first in the county, and the namesake for the future Mill Valley) and cut wood for the San Francisco Presidio (hence, “Corte Madera del Presidio”). He also raised cattle and horses and had a brickyard and stone quarry. In addition, he hunted elk, deer, bear and other game, and established a trade in skins, tallow and other rancho products. In 1836, he married Hilaria Sanchez, the daughter of the commandant of the local presidio, in a ceremony at Mission Dolores. At the behest of Mexican authorities, Reed served as administrator of the San Rafael mission from late 1836 to April of 1837. He then set out to build a larger house for his growing family in what is now Mill Valley (at La Goma and Locke Lane) but died in 1843, at the age of 38, before his house was finished. \n On Reed’s death, in accordance with Mexican law, his wife inherited the house and livestock and the land was divided up among the four children, all of whom were minors at the time. The Widow Reed, as she was called, had a difficult time maintaining control of the family’s land and livestock, which fell prey to squatters and cattle rustlers. Several years later, she married Benardino Garcia, and in 1846 during the Bear Flag revolt, fled with her children to Mission Dolores. After the Reeds were settled in San Francisco, an administrator sold rancho Corte Madera del Presidio to Benjamin Bucklew on credit. When no payments were received, Hilaria protested, and the rancho returned to the Reed family. The Reed claim was confirmed by the Land Commission in 1856, although the actual acreage they were given was far less than what had been included in the original Diseño. It is to the credit of Widow Reed that she managed to keep what remained of the family rancho going until her death in 1868. In the following decades, numerous additional court cases involving the Reed claim ensued and the Reeds ended up gaining back several thousand of their “lost” acres. Descendents of John Reed (such as the Lyfords and Deffebachs) continued to live on parts of the rancho Corte Madera del Presidio, through the 20th Century.',
-                        es: 'A los 15 años, John Reed partió de Dublín, Irlanda, con un tío marinero y se dirigió a Acapulco, México. En 1825, Reed abordó un barco mexicano y navegó por la costa de California, con una breve escala en Los Ángeles. En 1826, al igual que William Richardson antes que él, se separó de sus compañeros en Yerba Buena. A su llegada al Área de la Bahía, construyó una vivienda en Sausalito y solicitó al gobernador una concesión de tierras en la zona. Al ser denegada su solicitud, viajó al norte y fundó un rancho en lo que hoy es Cotati. Después de que una tribu indígena quemara su grano, regresó a Sausalito en 1832. Estableció un servicio de ferry en la bahía, que utilizó, entre otras cosas, para transportar barriles de agua de manantial de Sausalito a Yerba Buena.\n En 1834, el gobernador Figueroa le otorgó la primera concesión de tierras en Marín, el Rancho Corte Madera del Presidio, que abarcaba casi 5000 acres. En su nuevo rancho, Reed construyó un aserradero (el primero del condado y que dio nombre al futuro Valle del Molino) y cortó madera para el Presidio de San Francisco (de ahí el nombre "Corte Madera del Presidio"). También crió ganado vacuno y equino, y tuvo una ladrillera y una cantera de piedra. Además, cazó alces, venados, osos y otras presas, y estableció un comercio de pieles, sebo y otros productos del rancho. En 1836, se casó con Hilaria Sánchez, hija del comandante del presidio local, en una ceremonia celebrada en la Misión Dolores. A instancias de las autoridades mexicanas, Reed sirvió como administrador de la misión de San Rafael desde finales de 1836 hasta abril de 1837. Luego se propuso construir una casa más grande para su creciente familia en lo que hoy es Mill Valley (en La Goma y Locke Lane), pero murió en 1843, a la edad de 38 años, antes de que su casa estuviera terminada.\n A la muerte de Reed, de acuerdo con la ley mexicana, su esposa heredó la casa y el ganado, y la tierra se dividió entre los cuatro hijos, todos menores de edad en ese momento. La viuda Reed, como la llamaban, tuvo dificultades para mantener el control de las tierras y el ganado de la familia, que cayeron presa de ocupantes ilegales y cuatreros. Varios años después, se casó con Benardino García y, en 1846, durante la revuelta de la Bandera del Oso, huyó con sus hijos a la Misión Dolores. Después de que los Reed se establecieron en San Francisco, un administrador vendió el rancho Corte Madera del Presidio a Benjamin Bucklew a crédito. Al no recibir los pagos, Hilaria protestó y el rancho regresó a la familia Reed. La reclamación de los Reed fue confirmada por la Comisión de Tierras en 1856, aunque la superficie real que se les otorgó fue mucho menor de lo que se había\n Incluido en el Diseño original. Es mérito de la viuda Reed haber logrado conservar lo que quedaba del rancho familiar hasta su muerte en 1868. En las décadas siguientes, surgieron numerosos casos judiciales relacionados con la reclamación de los Reed, y los Reed acabaron recuperando varios miles de sus acres "perdidos". Los descendientes de John Reed (como los Lyford y los Deffebach) continuaron viviendo en partes del rancho Corte Madera del Presidio hasta el siglo XX.'
+                        en: 'Granted in 1834 by Governor José Figueroa to John Reed, this rancho was crucial for its timber resources, supplying wood to the Presidio of San Francisco. Reed was an Irish immigrant who became an influential figure in early Marin County.',
+                        es: 'Otorgado en 1834 por el gobernador José Figueroa a John Reed, este rancho fue crucial por sus recursos madereros, suministrando madera al Presidio de San Francisco. Reed fue un inmigrante irlandés que se convirtió en una figura influyente en los inicios del condado de Marin.'
                     }
                 }
             },
             'Soullajule': {
-                coordinates: [
-                    [38.134070493823586, -122.72525024571226],
-                    [38.12340287045033, -122.76044082798765],
-                    [38.14554657530658, -122.78790664830015],
-                    [38.15769575300814, -122.82103729405208],
-                    [38.16889820084662, -122.83992004551695],
-                    [38.18109746185443, -122.86127472238152],
-                    [38.19480570412978, -122.87226105050651],
-                    [38.20883508601526, -122.86505127267449],
-                    [38.20910485532582, -122.85234833077995],
-                    [38.20505821068454, -122.84410858468621],
-                    [38.20020194017038, -122.83449554757682],
-                    [38.20397906745351, -122.8279724152526],
-                    [38.20397906745351, -122.81423950509635],
-                    [38.20236032261288, -122.80840301827995],
-                    [38.19750387213767, -122.80290985421746],
-                    [38.18563118511921, -122.80016327218621],
-                    [38.1807736189769, -122.78608703927604],
-                    [38.17888447801048, -122.77819061593621],
-                    [38.17456625759166, -122.77132416085807],
-                    [38.15702085590265, -122.76205444650262],
-                    [38.164579392822404, -122.73527527169793],
-                    [38.16862828670254, -122.6951065094909],
-                    [38.134070493823586, -122.72525024571226]
-                ],
+                coordinates: [[38.134070493823586,-122.72525024571226],[38.12340287045033,-122.76044082798765],[38.14554657530658,-122.78790664830015],[38.15769575300814,-122.82103729405208],[38.16889820084662,-122.83992004551695],[38.18109746185443,-122.86127472238152],[38.19480570412978,-122.87226105050651],[38.20883508601526,-122.86505127267449],[38.20910485532582,-122.85234833077995],[38.20505821068454,-122.84410858468621],[38.20020194017038,-122.83449554757682],[38.20397906745351,-122.8279724152526],[38.20397906745351,-122.81423950509635],[38.20236032261288,-122.80840301827995],[38.19750387213767,-122.80290985421746],[38.18563118511921,-122.80016327218621],[38.1807736189769,-122.78608703927604],[38.17888447801048,-122.77819061593621],[38.17456625759166,-122.77132416085807],[38.15702085590265,-122.76205444650262],[38.164579392822404,-122.73527527169793],[38.16862828670254,-122.6951065094909],[38.134070493823586,-122.72525024571226]],
                 color: '#2ecc71',
                 info: {
-                    title: 'Soullajule',
-                    description: 'Historic Mexican land grant in western Marin County, known for its rugged coastal terrain.',
-                    details: 'Granted to Manuel Cabello Torrejon in 1846, this rancho covered the coastal hills and valleys of western Marin. The name is derived from the Coast Miwok word for the area.',
-                    features: 'Encompasses parts of present-day Lucas Valley and coastal hills. Now includes the Soullajule Reservoir and surrounding parklands.',
+                    title: { en: 'Soullajule', es: 'Soullajule' },
                     stats: {
-                        'Grant Year': '1846',
-                        'Original Grantee': 'Manuel Cabello Torrejon',
-                        'Approximate Acres': '17,700',
-                        'Notable Features': 'Soullajule Reservoir'
+                        en: { 'Grant Year': '1846', 'Original Grantee': 'Manuel Cabello Torrejon', 'Approximate Acres': '17,700', 'Notable Features': 'Soullajule Reservoir' },
+                        es: { 'Año de Concesión': '1846', 'Beneficiario Original': 'Manuel Cabello Torrejón', 'Acres Aproximados': '17,700', 'Características Notables': 'Embalse Soullajule' }
+                    },
+                    description: {
+                        en: 'A historic Mexican land grant in western Marin County, known for its rugged coastal terrain. The name is derived from a Coast Miwok word for the area. Today it includes the Soullajule Reservoir and surrounding parklands.',
+                        es: 'Una histórica concesión de tierras mexicana en el oeste del condado de Marin, conocida por su escarpado terreno costero. El nombre deriva de una palabra Miwok de la Costa para el área. Hoy incluye el Embalse de Soullajule y los parques circundantes.'
                     }
                 }
             },
             'Laguna de San Antonio': {
-                coordinates: [
-                    [38.266165545687045, -122.80325317697137],
-                    [38.2607742017911, -122.81835937814323],
-                    [38.157992709215904, -122.76171112374871],
-                    [38.18444380750062, -122.6734771759948],
-                    [38.186062950631374, -122.67553711251824],
-                    [38.191729668183555, -122.67279053048699],
-                    [38.190650327400974, -122.6786270173034],
-                    [38.194158126461524, -122.68103027658073],
-                    [38.197395944866685, -122.68652344064323],
-                    [38.19766575656877, -122.6902999909362],
-                    [38.197395944866685, -122.69750976876824],
-                    [38.20063361930768, -122.69956970529168],
-                    [38.20063361930768, -122.70300293283073],
-                    [38.19793556727113, -122.70574951486198],
-                    [38.20360136107342, -122.71124267892448],
-                    [38.20845740483092, -122.71295929269402],
-                    [38.20953648167321, -122.71536255197137],
-                    [38.2157408630576, -122.71398926095574],
-                    [38.266165545687045, -122.80325317697137]
-                ],
+                coordinates: [[38.266165545687045,-122.80325317697137],[38.2607742017911,-122.81835937814323],[38.157992709215904,-122.76171112374871],[38.18444380750062,-122.6734771759948],[38.186062950631374,-122.67553711251824],[38.191729668183555,-122.67279053048699],[38.190650327400974,-122.6786270173034],[38.194158126461524,-122.68103027658073],[38.197395944866685,-122.68652344064323],[38.19766575656877,-122.6902999909362],[38.197395944866685,-122.69750976876824],[38.20063361930768,-122.69956970529168],[38.20063361930768,-122.70300293283073],[38.19793556727113,-122.70574951486198],[38.20360136107342,-122.71124267892448],[38.20845740483092,-122.71295929269402],[38.20953648167321,-122.71536255197137],[38.2157408630576,-122.71398926095574],[38.266165545687045,-122.80325317697137]],
                 color: '#9b59b6',
                 info: {
-                    title: 'Laguna de San Antonio',
-                    description: 'Northernmost Mexican land grant in Marin County, extending into Sonoma County.',
-                    details: 'Granted to Rafael Cacho in 1845, this rancho was named after a lagoon (now drained) that existed in the area. It represents the northern boundary of Mexican land grants in Marin.',
-                    features: 'Covers parts of modern Petaluma and rural northern Marin. Known for its rolling hills and agricultural use.',
+                    title: { en: 'Laguna de San Antonio', es: 'Laguna de San Antonio' },
                     stats: {
-                        'Grant Year': '1845',
-                        'Original Grantee': 'Rafael Cacho',
-                        'Approximate Acres': '17,200',
-                        'Counties': 'Marin, Sonoma'
+                        en: { 'Grant Year': '1845', 'Original Grantee': 'Rafael Cacho', 'Approximate Acres': '17,200', 'Counties': 'Marin, Sonoma' },
+                        es: { 'Año de Concesión': '1845', 'Beneficiario Original': 'Rafael Cacho', 'Acres Aproximados': '17,200', 'Condados': 'Marin, Sonoma' }
+                    },
+                    description: {
+                        en: 'The northernmost Mexican land grant in Marin County, extending into Sonoma County. Granted to Rafael Cacho in 1845, this rancho was named after a lagoon that existed in the area.',
+                        es: 'La concesión de tierra mexicana más al norte del condado de Marin, que se extiende hasta el condado de Sonoma. Otorgada a Rafael Cacho en 1845, este rancho recibió su nombre de una laguna que existía en la zona.'
                     }
                 }
             },
@@ -1155,38 +1064,44 @@
             }
         };
 
-        function addImageOverlay(url, bounds) {
-            if (imageOverlay) {
-                map.removeLayer(imageOverlay);
-            }
-            imageOverlay = L.imageOverlay(url, bounds).addTo(map);
-            map.fitBounds(bounds);
+        // --- UTILITY FUNCTIONS ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
-        document.getElementById('langToggle').addEventListener('click', () => {
-            currentLang = currentLang === 'en' ? 'es' : 'en';
-            document.getElementById('langToggle').innerText = currentLang === 'en' ? 'ES' : 'EN';
-            if (highlightedRegion) {
-                renderRegionInfo(regionData[highlightedRegion]);
+        function isPointInPolygon(lat, lng, coordinates) {
+            let inside = false;
+            const x = lat;
+            const y = lng;
+            for (let i = 0, j = coordinates.length - 1; i < coordinates.length; j = i++) {
+                const xi = coordinates[i][0]; const yi = coordinates[i][1];
+                const xj = coordinates[j][0]; const yj = coordinates[j][1];
+                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
             }
-        });
-        
+            return inside;
+        }
+
+        // --- MAP INITIALIZATION ---
         function initMap() {
-            // Initialize map centered on Marin County
-            map = L.map('map').setView([38.0834, -122.7633], 9);
-            // Add OpenStreetMap tile layer
+            map = L.map('map').setView([38.0834, -122.7633], 9.5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            addImageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]);
+            // The image overlay has been commented out because the image file was not provided.
+            // If you have the image, you can uncomment the next line.
+            // L.imageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]).addTo(map);
 
-            // Create region polygons with enhanced functionality
             Object.keys(regionData).forEach(regionName => {
                 const region = regionData[regionName];
-                
-                // Create polygon with improved styling
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
                     weight: 3,
@@ -1196,66 +1111,104 @@
                     smoothFactor: 1
                 }).addTo(map);
 
-                // Store region data
-                regions.push({
-                    name: regionName,
-                    polygon: polygon,
-                    data: region
-                });
+                regions.push({ name: regionName, polygon: polygon, data: region });
 
-                // Enhanced click listener
-                polygon.on('click', (e) => {
-                    clearHighlight();
-                    highlightRegion(polygon, region.color);
+                polygon.on('click', () => {
+                    highlightRegion(regionName);
                     showRegionInfo(regionName, region.info);
-                    
-                    // Center map on polygon
-                    const bounds = polygon.getBounds();
-                    map.fitBounds(bounds, { padding: [20, 20] });
-                });
-
-                // Enhanced hover effects
-                polygon.on('mouseover', function() {
-                    if (highlightedRegion !== polygon) {
-                        polygon.setStyle({
-                            weight: 4,
-                            opacity: 1,
-                            fillOpacity: 0.3
-                        });
-                    }
-                });
-
-                polygon.on('mouseout', function() {
-                    if (highlightedRegion !== polygon) {
-                        polygon.setStyle({
-                            weight: 3,
-                            opacity: 0.8,
-                            fillOpacity: 0.2
-                        });
-                    }
-                });
-
-                // Improved tooltip
-                polygon.bindTooltip(`<strong>${regionName}</strong><br>Click for details`, {
-                    permanent: false,
-                    direction: 'center',
-                    className: 'custom-tooltip'
+                    map.fitBounds(polygon.getBounds(), { padding: [50, 50] });
                 });
             });
 
-            // Search functionality
             document.getElementById('searchBtn').addEventListener('click', searchAddress);
-            document.getElementById('addressInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchAddress();
-                }
+            document.getElementById('addressInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchAddress();
             });
+            document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+
+            showWelcomeMessage(); // Show initial welcome message
+        }
+        
+        // --- UI AND DISPLAY FUNCTIONS ---
+        function showWelcomeMessage() {
+            const infoContent = document.getElementById('infoContent');
+            infoContent.innerHTML = `
+                <div class="info-title">Welcome to Address to Rancho</div>
+                <div class="info-text">Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.</div>
+            `;
         }
 
+        function showRegionInfo(regionName, info, searchContext = null) {
+            const infoContent = document.getElementById('infoContent');
+            
+            const description = info.description?.[currentLang]?.replace(/\n/g, '<br><br>') || 'Description not available.';
+            const title = info.title?.[currentLang] || regionName;
+
+            let searchContextHTML = '';
+            if (searchContext) {
+                searchContextHTML = `
+                    <div class="coordinates-info">
+                        <strong>📍 Search Result:</strong><br>
+                        ${escapeHTML(searchContext.address)}<br>
+                        <small>Coordinates: ${searchContext.coordinates[0].toFixed(5)}, ${searchContext.coordinates[1].toFixed(5)}</small>
+                    </div>
+                `;
+            }
+
+            const statsForLang = info.stats?.[currentLang] || {};
+            const statsHTML = Object.entries(statsForLang).map(([label, value]) => `
+                <div class="stat-item">
+                    <span class="stat-label">${escapeHTML(label)}:</span>
+                    <span class="stat-value">${escapeHTML(value)}</span>
+                </div>
+            `).join('');
+
+            infoContent.innerHTML = `
+                <div class="info-title">${escapeHTML(title)}</div>
+                ${searchContextHTML}
+                <div class="region-stats">
+                    ${statsHTML}
+                </div>
+                <div class="info-text">${description}</div>
+            `;
+        }
+
+        function showLoading() {
+            document.getElementById('infoContent').innerHTML = '<div class="loading">Searching...</div>';
+        }
+
+        function showError(message) {
+            document.getElementById('infoContent').innerHTML = `<div class="error"><strong>Error:</strong> ${escapeHTML(message)}</div>`;
+        }
+
+        function showNoRegionFound(address, lat, lng) {
+            document.getElementById('infoContent').innerHTML = `
+                <div class="info-title">Location Found</div>
+                <div class="coordinates-info">
+                    <strong>📍 Address:</strong><br>${escapeHTML(address)}<br>
+                    <small>Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>
+                </div>
+                <div class="info-text">This location is outside of the historic rancho boundaries shown on this map.</div>
+            `;
+        }
+        
+        // --- CORE LOGIC ---
+        function toggleLanguage() {
+            currentLang = (currentLang === 'en') ? 'es' : 'en';
+            document.getElementById('langToggle').innerText = (currentLang === 'en') ? 'ES' : 'EN';
+            
+            if (highlightedRegionName) {
+                const region = regionData[highlightedRegionName];
+                if (region) {
+                    showRegionInfo(highlightedRegionName, region.info);
+                }
+            }
+        }
+        
         async function searchAddress() {
             const address = document.getElementById('addressInput').value.trim();
             if (!address) {
-                showError('Please enter an address to search.');
+                showError('Please enter an address.');
                 return;
             }
 
@@ -1263,267 +1216,61 @@
             clearHighlight();
 
             try {
-                // Enhanced Nominatim query with better parameters
                 const query = encodeURIComponent(address + ', Marin County, California');
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=us&addressdetails=1`
-                );
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=us`);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error('Network response was not ok.');
                 
                 const data = await response.json();
 
                 if (data && data.length > 0) {
-                    // Find the best match (preferring results in Marin County)
-                    let bestResult = data.find(result => 
-                        result.display_name.toLowerCase().includes('marin') ||
-                        result.display_name.toLowerCase().includes('california')
-                    ) || data[0];
-
+                    const bestResult = data[0]; 
                     const lat = parseFloat(bestResult.lat);
                     const lng = parseFloat(bestResult.lon);
-                    const displayName = bestResult.display_name;
 
-                    // Validate coordinates are reasonable for Marin County area
-                    if (lat < 37.8 || lat > 38.3 || lng < -123.1 || lng > -122.4) {
-                        showError('The address appears to be outside the Marin County area. Please try a different address.');
-                        return;
-                    }
+                    if (currentMarker) map.removeLayer(currentMarker);
+                    currentMarker = L.marker([lat, lng]).addTo(map).bindPopup(bestResult.display_name).openPopup();
+                    map.setView([lat, lng], 14);
 
-                    // Clear previous marker
-                    if (currentMarker) {
-                        map.removeLayer(currentMarker);
-                    }
-
-                    // Add enhanced marker
-                    currentMarker = L.marker([lat, lng], {
-                        title: displayName
-                    })
-                        .addTo(map)
-                        .bindPopup(`<strong>Found Location:</strong><br>${displayName}`)
-                        .openPopup();
-
-                    // Center map on result with appropriate zoom
-                    map.setView([lat, lng], 15);
-
-                    // Enhanced region detection
-                    const foundRegion = findRegionContainingPoint(lat, lng);
+                    const foundRegion = regions.find(r => isPointInPolygon(lat, lng, r.data.coordinates));
                     
                     if (foundRegion) {
-                        // Highlight the found region
-                        highlightRegion(foundRegion.polygon, foundRegion.data.color);
-                        
-                        // Show region information with search context
+                        highlightRegion(foundRegion.name);
                         showRegionInfo(foundRegion.name, foundRegion.data.info, {
-                            address: displayName,
+                            address: bestResult.display_name,
                             coordinates: [lat, lng]
                         });
-                        
-                        // Fit map to show both marker and region
-                        const group = new L.featureGroup([currentMarker, foundRegion.polygon]);
-                        map.fitBounds(group.getBounds(), { padding: [20, 20] });
-                        
                     } else {
-                        showNoRegionFound(displayName, lat, lng);
+                        showNoRegionFound(bestResult.display_name, lat, lng);
                     }
                 } else {
-                    showError('Address not found. Please try a more specific address or check the spelling.');
+                    showError('Address not found. Please try again.');
                 }
             } catch (error) {
-                console.error('Geocoding error:', error);
-                showError('Search failed due to a network error. Please check your internet connection and try again.');
+                console.error('Search error:', error);
+                showError('Could not perform search. Please check your connection.');
             }
         }
 
-        // Enhanced point-in-polygon algorithm with better precision
-        function findRegionContainingPoint(lat, lng) {
-            for (let region of regions) {
-                if (isPointInPolygon(lat, lng, region.data.coordinates)) {
-                    return region;
-                }
-            }
-            return null;
-        }
-
-        // Improved point-in-polygon algorithm (ray casting)
-        function isPointInPolygon(lat, lng, coordinates) {
-            let inside = false;
-            const x = lat;
-            const y = lng;
-            
-            for (let i = 0, j = coordinates.length - 1; i < coordinates.length; j = i++) {
-                const xi = coordinates[i][0];
-                const yi = coordinates[i][1];
-                const xj = coordinates[j][0];
-                const yj = coordinates[j][1];
-
-                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
-            }
-            return inside;
-        }
-
-        // Enhanced region highlighting
-        function highlightRegion(polygon, color) {
+        function highlightRegion(regionName) {
             clearHighlight();
-            polygon.setStyle({
-                weight: 5,
-                opacity: 1,
-                fillOpacity: 0.4,
-                color: color
-            });
-            highlightedRegion = polygon;
+            const region = regions.find(r => r.name === regionName);
+            if (region) {
+                region.polygon.setStyle({ weight: 5, fillOpacity: 0.4 });
+                highlightedRegionPolygon = region.polygon;
+                highlightedRegionName = region.name;
+            }
         }
 
         function clearHighlight() {
-            if (highlightedRegion) {
-                const regionData = regions.find(r => r.polygon === highlightedRegion);
-                if (regionData) {
-                    highlightedRegion.setStyle({
-                        weight: 3,
-                        opacity: 0.8,
-                        fillOpacity: 0.2,
-                        color: regionData.data.color
-                    });
-                }
-                highlightedRegion = null;
+            if (highlightedRegionPolygon) {
+                highlightedRegionPolygon.setStyle({ weight: 3, fillOpacity: 0.2 });
             }
+            highlightedRegionPolygon = null;
+            highlightedRegionName = null;
         }
 
-        // Enhanced region information display
-        function showRegionInfo(regionName, info, searchContext = null) {
-            const infoContent = document.getElementById('infoContent');
-            const description = (region.info.description?.[currentLang] || '').replace(/\n/g, '<br><br>');
-            
-            let searchContextHTML = '';
-            if (searchContext) {
-                searchContextHTML = `
-                    <div class="coordinates-info">
-                        <strong>📍 Search Result:</strong><br>
-                        ${searchContext.address}<br>
-                        <small>Coordinates: ${searchContext.coordinates[0].toFixed(6)}, ${searchContext.coordinates[1].toFixed(6)}</small>
-                    </div>
-                `;
-            }
-            
-            infoContent.innerHTML = `
-                <div class="info-title">${info.title}</div>
-                ${searchContextHTML}
-                
-                <div class="region-stats">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Historic Details</h3>
-                    ${Object.keys(info.stats).map(stat => `
-                        <div class="stat-item">
-                            <span class="stat-label">${stat?.[currentLang] || ''}:</span>
-                            <span class="stat-value">${info.stats[stat]?.[currentLang] || ''}</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="info-text">${description}</div>
-            `;
-        }
-
-        function showLoading() {
-            const infoContent = document.getElementById('infoContent');
-            infoContent.innerHTML = '<div class="loading">Searching for address</div>';
-        }
-
-        function showError(message) {
-            const infoContent = document.getElementById('infoContent');
-            infoContent.innerHTML = `<div class="error"><strong>Error:</strong> ${message}</div>`;
-        }
-
-        function showNoRegionFound(address, lat, lng) {
-            const infoContent = document.getElementById('infoContent');
-            infoContent.innerHTML = `
-                <div class="info-title">Location Found</div>
-                <div class="coordinates-info">
-                    <strong>📍 Address:</strong><br>${address}<br>
-                    <small>Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</small>
-                </div>
-                <div class="info-text">
-                    This location is outside of the historic Mexican land grant boundaries shown on this map.
-                </div>
-                <div class="info-text">
-                    The colored regions represent the original ranchos granted during the Mexican period (1821-1848). 
-                    Your searched location may be in an area that was not part of these historic land grants.
-                </div>
-                <div class="search-suggestion">
-                    <div class="suggestion-title">💡 Try these suggestions:</div>
-                    • Search for addresses within the colored regions<br>
-                    • Click directly on any colored region to learn about that rancho<br>
-                    • Try searching for well-known locations like "San Rafael, CA" or "Novato, CA"
-                </div>
-            `;
-        }
-
-        // Add keyboard shortcuts and additional interactions
-        document.addEventListener('keydown', function(e) {
-            // Press 'Escape' to clear highlights and reset view
-            if (e.key === 'Escape') {
-                clearHighlight();
-                if (currentMarker) {
-                    map.removeLayer(currentMarker);
-                    currentMarker = null;
-                }
-                // Reset to default view
-                map.setView([38.0834, -122.7633], 10);
-                
-                // Reset info panel to welcome message
-                const infoContent = document.getElementById('infoContent');
-                infoContent.innerHTML = `
-                    <div class="info-title">Welcome to Regional Explorer</div>
-                    <div class="info-text">
-                        Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.
-                    </div>
-                    <div class="info-text">
-                        The map shows the original ranchos of Marin County with detailed information about each one.
-                    </div>
-                    <div class="info-text">
-                        Click on any rancho polygon or search for an address to get detailed information!
-                    </div>
-                    <div class="info-text">
-                        This system uses free OpenStreetMap data integrated using Leaflet.
-                    </div>
-                `;
-            }
-        });
-
-        // Improve search input with suggestions
-        document.getElementById('addressInput').addEventListener('input', function(e) {
-            const value = e.target.value.toLowerCase();
-            if (value.length > 2) {
-                // Simple validation and suggestions could be added here
-                // For now, we'll just ensure the input is clean
-                this.value = this.value.replace(/[<>]/g, ''); // Basic XSS prevention
-            }
-        });
-
-        // Add double-click to zoom functionality
-        regions.forEach(region => {
-            region.polygon.on('dblclick', function(e) {
-                L.DomEvent.stopPropagation(e);
-                map.fitBounds(region.polygon.getBounds(), { 
-                    padding: [50, 50],
-                    maxZoom: 12
-                });
-            });
-        });
-
-        // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', initMap);
-
-        // Add window resize handler to maintain map responsiveness
-        window.addEventListener('resize', function() {
-            if (map) {
-                setTimeout(function() {
-                    map.invalidateSize();
-                }, 100);
-            }
-        });
     </script>
 </body>
 </html>
