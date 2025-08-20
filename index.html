@@ -110,7 +110,7 @@
         }
         
         .info-panel {
-            width: 600px;
+            width: 500px;
             background: white;
             border-left: 1px solid #e9ecef;
             overflow-y: auto;
@@ -1147,18 +1147,17 @@
             imageOverlay = L.imageOverlay(url, bounds).addTo(map);
             map.fitBounds(bounds);
         }
-    
-        addImageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]);
-
+        
         function initMap() {
             // Initialize map centered on Marin County
             map = L.map('map').setView([38.0834, -122.7633], 10);
-
             // Add OpenStreetMap tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
+
+            addImageOverlay('/RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]);
 
             // Create region polygons with enhanced functionality
             Object.keys(regionData).forEach(regionName => {
