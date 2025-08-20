@@ -1182,8 +1182,6 @@
 
             addImageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]);
 
-            const description = (info.description?.[currentLang] || '').replace(/\n/g, '<br><br>');
-
             // Create region polygons with enhanced functionality
             Object.keys(regionData).forEach(regionName => {
                 const region = regionData[regionName];
@@ -1398,6 +1396,7 @@
         // Enhanced region information display
         function showRegionInfo(regionName, info, searchContext = null) {
             const infoContent = document.getElementById('infoContent');
+            const description = (info.description?.[currentLang] || '').replace(/\n/g, '<br><br>');
             
             let searchContextHTML = '';
             if (searchContext) {
