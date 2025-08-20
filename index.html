@@ -110,7 +110,7 @@
         }
         
         .info-panel {
-            width: 400px;
+            width: 600px;
             background: white;
             border-left: 1px solid #e9ecef;
             overflow-y: auto;
@@ -259,6 +259,7 @@
         let regions = [];
         let currentMarker;
         let highlightedRegion = null;
+        let imageOverlay;
 
         // Enhanced region data with proper statistics and information
         const regionData = {
@@ -1139,6 +1140,16 @@
             }
         };
 
+        function addImageOverlay(url, bounds) {
+            if (imageOverlay) {
+                map.removeLayer(imageOverlay);
+            }
+            imageOverlay = L.imageOverlay(url, bounds).addTo(map);
+            map.fitBounds(bounds);
+        }
+    
+        addImageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]);
+
         function initMap() {
             // Initialize map centered on Marin County
             map = L.map('map').setView([38.0834, -122.7633], 10);
@@ -1378,8 +1389,6 @@
             infoContent.innerHTML = `
                 <div class="info-title">${info.title}</div>
                 ${searchContextHTML}
-                <div class="info-text">${info.description}</div>
-                <div class="info-text">${info.details}</div>
                 <div class="region-stats">
                     <h3 style="margin-bottom: 15px; color: #2c3e50;">Historic Details</h3>
                     ${Object.keys(info.stats).map(stat => `
@@ -1389,7 +1398,7 @@
                         </div>
                     `).join('')}
                 </div>
-                <div class="info-text"><strong>Modern Features:</strong> ${info.features}</div>
+                <div class="info-text">${info.description}</div>
             `;
         }
 
