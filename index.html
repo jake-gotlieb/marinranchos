@@ -1108,6 +1108,18 @@
             }
         };
 
+        // --- FIX ALL REGIONS TOGETHER (CRITICAL) ---
+
+        const allPolygons = Object.values(regionData).map(r => r.coordinates);
+        
+        // Snap ALL polygons against EACH OTHER
+        const fixedPolygons = snapAndRoundCoordinates(allPolygons);
+        
+        // Write them back
+        Object.values(regionData).forEach((region, i) => {
+            region.coordinates = fixedPolygons[i];
+        });
+
         // --- UTILITY FUNCTIONS ---
         function escapeHTML(str) {
             if (!str) return '';
@@ -1147,7 +1159,6 @@
             Object.keys(regionData).forEach(regionName => {
                 
                 const region = regionData[regionName];
-                region.coordinates = snapAndRoundCoordinates([region.coordinates])[0];
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
                     weight: 3,
