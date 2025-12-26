@@ -1145,9 +1145,9 @@
             //L.imageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]).addTo(map);
 
             Object.keys(regionData).forEach(regionName => {
-                region.coordinates = snapAndRoundCoordinates([region.coordinates])[0];
                 
                 const region = regionData[regionName];
+                region.coordinates = snapAndRoundCoordinates([region.coordinates])[0];
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
                     weight: 3,
