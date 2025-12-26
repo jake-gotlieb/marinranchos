@@ -251,6 +251,50 @@
         let highlightedRegionPolygon = null;
         let highlightedRegionName = null;
         let currentLang = 'en';
+        // --- GEOMETRY CLEANUP UTILITIES ---
+
+        const SNAP_TOLERANCE = 0.000005; // ~0.5 meters
+        const ROUND_PRECISION = 6;       // ~11 cm
+        
+        function roundCoord(value) {
+            const factor = Math.pow(10, ROUND_PRECISION);
+            return Math.round(value * factor) / factor;
+        }
+        
+        function snapAndRoundCoordinates(polygons) {
+            const allPoints = [];
+        
+            // Collect all points
+            polygons.forEach(poly => {
+                poly.forEach(([lat, lng]) => {
+                    allPoints.push([lat, lng]);
+                });
+            });
+        
+            // Snap points
+            function findSnap(lat, lng) {
+                for (const [slat, slng] of allPoints) {
+                    if (
+                        Math.abs(lat - slat) < SNAP_TOLERANCE &&
+                        Math.abs(lng - slng) < SNAP_TOLERANCE
+                    ) {
+                        return [slat, slng];
+                    }
+                }
+                return [lat, lng];
+            }
+        
+            // Apply snapping + rounding
+            return polygons.map(poly =>
+                poly.map(([lat, lng]) => {
+                    const [sLat, sLng] = findSnap(lat, lng);
+                    return [
+                        roundCoord(sLat),
+                        roundCoord(sLng)
+                    ];
+                })
+            );
+        }
 
         // --- DATA ---
         // FIX: Standardized the data structure. All entries now have a consistent format
@@ -1101,6 +1145,8 @@
             //L.imageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]).addTo(map);
 
             Object.keys(regionData).forEach(regionName => {
+                region.coordinates = snapAndRoundCoordinates([region.coordinates])[0];
+                
                 const region = regionData[regionName];
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
