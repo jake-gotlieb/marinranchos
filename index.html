@@ -1110,15 +1110,49 @@
 
         // --- FIX ALL REGIONS TOGETHER (CRITICAL) ---
 
-        const allPolygons = Object.values(regionData).map(r => r.coordinates);
+        function snapAndRoundCoordinates(polygons) {
+            const clusters = [];
         
-        // Snap ALL polygons against EACH OTHER
-        const fixedPolygons = snapAndRoundCoordinates(allPolygons);
+            function findCluster(lat, lng) {
+                for (const c of clusters) {
+                    if (
+                        Math.abs(lat - c.lat) < SNAP_TOLERANCE &&
+                        Math.abs(lng - c.lng) < SNAP_TOLERANCE
+                    ) {
+                        return c;
+                    }
+                }
+                return null;
+            }
         
-        // Write them back
-        Object.values(regionData).forEach((region, i) => {
-            region.coordinates = fixedPolygons[i];
-        });
+            // Build clusters
+            polygons.forEach(poly => {
+                poly.forEach(([lat, lng]) => {
+                    let cluster = findCluster(lat, lng);
+                    if (!cluster) {
+                        cluster = { lat, lng, count: 0 };
+                        clusters.push(cluster);
+                    }
+                    cluster.lat += lat;
+                    cluster.lng += lng;
+                    cluster.count++;
+                });
+            });
+        
+            // Average clusters
+            clusters.forEach(c => {
+                c.lat = roundCoord(c.lat / c.count);
+                c.lng = roundCoord(c.lng / c.count);
+            });
+        
+            // Rebuild polygons using canonical cluster coords
+            return polygons.map(poly =>
+                poly.map(([lat, lng]) => {
+                    const c = findCluster(lat, lng);
+                    return [c.lat, c.lng];
+                })
+            );
+        }
 
         // --- UTILITY FUNCTIONS ---
         function escapeHTML(str) {
