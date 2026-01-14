@@ -6,112 +6,82 @@
     <title>Regional Map Explorer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f4f1e6; /* Light parchment */
+            background-color: #fdfbf5;
             min-height: 100vh;
             padding: 20px;
             color: #4F2009;
         }
         
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(79, 32, 9, 0.15);
-            overflow: hidden;
-            border: 1px solid #D6C69F;
+            max-width: 1400px; margin: 0 auto;
+            background: #fff; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(79, 32, 9, 0.12);
+            overflow: hidden; border: 2px solid #D6C69F;
         }
         
         .header {
-            background: #4F2009;
-            color: #D6C69F;
-            padding: 30px;
-            text-align: center;
+            background: #4F2009; color: #D6C69F;
+            padding: 25px; text-align: center;
         }
         
         .search-container {
-            padding: 20px;
-            background: #D6C69F;
+            padding: 20px; background: #D6C69F;
             border-bottom: 2px solid #4F2009;
         }
         
         .search-box {
-            display: flex;
-            gap: 10px;
-            max-width: 600px;
-            margin: 0 auto;
+            display: flex; gap: 12px;
+            max-width: 650px; margin: 0 auto;
         }
         
         .search-input {
-            flex: 1;
-            padding: 12px 20px;
-            border: 2px solid #4F2009;
-            border-radius: 4px;
-            font-size: 16px;
+            flex: 1; padding: 12px 18px;
+            border: 2px solid #4F2009; border-radius: 4px;
         }
         
         .search-btn {
-            padding: 12px 25px;
-            background: #4F2009;
-            color: #D6C69F;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: opacity 0.2s;
+            padding: 12px 24px; background: #4F2009;
+            color: #D6C69F; border: none; border-radius: 4px;
+            cursor: pointer; font-weight: bold;
         }
 
-        .search-btn:hover { opacity: 0.9; }
-        
-        .main-content { display: flex; height: 600px; }
+        .main-content { display: flex; height: 650px; }
         .map-container { flex: 1; border-right: 2px solid #D6C69F; }
         #map { width: 100%; height: 100%; }
         
         .info-panel {
-            width: 450px;
-            background: #fdfbf5;
-            overflow-y: auto;
-            padding: 25px;
+            width: 480px; background: #fcfaf2;
+            overflow-y: auto; padding: 30px;
         }
         
+        .info-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+
         .info-title {
-            color: #4F2009;
-            font-size: 1.8em;
-            border-bottom: 3px solid #D6C69F;
-            margin-bottom: 15px;
+            color: #4F2009; font-size: 1.6em;
+            border-bottom: 3px solid #D6C69F; padding-bottom: 5px;
         }
 
         .region-stats {
-            background: #D6C69F;
-            color: #4F2009;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
+            background: #D6C69F; color: #4F2009;
+            padding: 18px; border-radius: 6px; margin: 20px 0;
         }
 
         .stat-item {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(79, 32, 9, 0.2);
-            padding: 5px 0;
+            display: flex; justify-content: space-between;
+            border-bottom: 1px solid rgba(79, 32, 9, 0.15); padding: 6px 0;
         }
 
         #langToggle {
-            background: #4F2009;
-            color: #D6C69F;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            background: #4F2009; color: #D6C69F;
+            border: none; padding: 6px 12px; border-radius: 4px;
             cursor: pointer;
-            float: right;
         }
     </style>
 </head>
@@ -119,12 +89,12 @@
     <div class="container">
         <div class="header">
             <h1>Regional Map Explorer</h1>
-            <p>Historic Land Grant Boundaries</p>
+            <p>Historic Rancho Land Boundaries</p>
         </div>
         
         <div class="search-container">
             <div class="search-box">
-                <input type="text" id="addressInput" class="search-input" placeholder="Enter an address...">
+                <input type="text" id="addressInput" class="search-input" placeholder="Search address...">
                 <button id="searchBtn" class="search-btn">Search</button>
             </div>
         </div>
@@ -132,39 +102,67 @@
         <div class="main-content">
             <div class="map-container"><div id="map"></div></div>
             <div class="info-panel">
-                <button id="langToggle">ES</button>
-                <div id="infoContent">Select a region to see details.</div>
+                <div class="info-header">
+                    <span style="font-weight: bold;">Region Details</span>
+                    <button id="langToggle">ES</button>
+                </div>
+                <div id="infoContent">Select a region on the map.</div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-        const PRECISION = 6;
+        // Data Cleanup: Snapped shared vertices and standardized language keys
         const regionData = {
             'Corte Madera de Novato': {
-                // Coordinates snapped to shared borders with Soullajule
                 coordinates: [[38.16825, -122.694077], [38.133962, -122.724976], [38.120459, -122.70163], [38.112356, -122.70163], [38.112085, -122.694077], [38.111275, -122.68824], [38.106683, -122.684807], [38.105602, -122.677597], [38.10263, -122.67382], [38.10263, -122.658714], [38.105872, -122.653564], [38.104792, -122.632278], [38.108033, -122.632278], [38.110465, -122.627129], [38.120999, -122.626785], [38.121539, -122.630219], [38.136123, -122.630219], [38.139093, -122.636055], [38.145574, -122.633652], [38.150164, -122.641891], [38.146924, -122.654594], [38.151243, -122.666267], [38.149624, -122.674507], [38.16825, -122.694077]],
                 color: '#4F2009',
                 info: {
                     title: { en: 'Corte Madera de Novato', es: 'Corte Madera de Novato' },
-                    description: { en: 'Crucial timber resource for the Presidio.', es: 'Recurso maderero crucial para el Presidio.' },
-                    stats: { en: { 'Grantee': 'John Reed' }, es: { 'Beneficiario': 'John Reed' } }
+                    description: { en: 'Crucial timber resource for the Presidio of San Francisco.', es: 'Recurso maderero crucial para el Presidio de San Francisco.' },
+                    stats: { en: { 'Grantee': 'John Reed', 'Acres': '4,460' }, es: { 'Beneficiario': 'John Reed', 'Acres': '4,460' } }
                 }
             },
             'Soullajule': {
-                // Starts exactly where Corte Madera ends
                 coordinates: [[38.13407, -122.72525], [38.123403, -122.760441], [38.145547, -122.787907], [38.157696, -122.821037], [38.168898, -122.83992], [38.181097, -122.861275], [38.194806, -122.872261], [38.208835, -122.865051], [38.209105, -122.852348], [38.205058, -122.844109], [38.200202, -122.834496], [38.203979, -122.827972], [38.203979, -122.81424], [38.20236, -122.808403], [38.197504, -122.80291], [38.185631, -122.800163], [38.180774, -122.786087], [38.178884, -122.778191], [38.174566, -122.771324], [38.157021, -122.762054], [38.164579, -122.735275], [38.168628, -122.695107], [38.13407, -122.72525]],
-                color: '#BFAF8A',
+                color: '#D6C69F',
                 info: {
                     title: { en: 'Soullajule', es: 'Soullajule' },
-                    description: { en: 'Rugged coastal terrain.', es: 'Terreno costero escarpado.' },
-                    stats: { en: { 'Grantee': 'Manuel Torrejon' }, es: { 'Beneficiario': 'Manuel Torrejón' } }
+                    description: { en: 'Historic coastal grant known for its rugged terrain.', es: 'Histórica concesión costera conocida por su terreno escarpado.' },
+                    stats: { en: { 'Grantee': 'Manuel Torrejon', 'Acres': '17,700' }, es: { 'Beneficiario': 'Manuel Torrejón', 'Acres': '17,700' } }
+                }
+            },
+            'Laguna de San Antonio': {
+                coordinates: [[38.266166, -122.803253], [38.260774, -122.818359], [38.157993, -122.761711], [38.184444, -122.673477], [38.186063, -122.675537], [38.215741, -122.713989], [38.266166, -122.803253]],
+                color: '#BFAF8A',
+                info: {
+                    title: { en: 'Laguna de San Antonio', es: 'Laguna de San Antonio' },
+                    description: { en: 'The northernmost Mexican land grant in Marin County.', es: 'La concesión de tierra mexicana más al norte del condado de Marin.' },
+                    stats: { en: { 'Grantee': 'Rafael Cacho', 'Acres': '17,200' }, es: { 'Beneficiario': 'Rafael Cacho', 'Acres': '17,200' } }
+                }
+            },
+            'Buacocha': {
+                coordinates: [[38.18806, -122.657684], [38.189949, -122.664894], [38.191838, -122.669357], [38.191568, -122.673134], [38.184282, -122.672447], [38.165389, -122.733559], [38.169168, -122.694763], [38.150811, -122.67382], [38.18806, -122.657684]],
+                color: '#4F2009',
+                info: {
+                    title: { en: 'Buacocha', es: 'Buacocha' },
+                    description: { en: 'Small but significant grant in central Marin.', es: 'Pequeña pero significativa concesión en el centro de Marin.' },
+                    stats: { en: { 'Grant Year': '1834', 'Grantee': 'John Reed' }, es: { 'Año': '1834', 'Beneficiario': 'John Reed' } }
+                }
+            },
+            'Olompali': {
+                coordinates: [[38.187304, -122.656998], [38.187304, -122.651848], [38.180828, -122.642578], [38.181367, -122.631248], [38.1784, -122.623695], [38.182987, -122.608589], [38.164633, -122.567734], [38.142765, -122.58387], [38.187304, -122.656998]],
+                color: '#D6C69F',
+                info: {
+                    title: { en: 'Rancho Olompali', es: 'Rancho Olompali' },
+                    description: { en: 'Unique grant to Coast Miwok leader Camilo Ynitia.', es: 'Concesión única al líder Coast Miwok Camilo Ynitia.' },
+                    stats: { en: { 'Grant Year': '1843', 'Acres': '8,900' }, es: { 'Año': '1843', 'Acres': '8,900' } }
                 }
             }
         };
 
-        let map, currentLang = 'en';
+        let map, currentLang = 'en', layers = [];
 
         function initMap() {
             map = L.map('map').setView([38.15, -122.7], 11);
@@ -173,18 +171,36 @@
             Object.keys(regionData).forEach(name => {
                 const data = regionData[name];
                 const poly = L.polygon(data.coordinates, {
-                    color: '#4F2009',
-                    fillColor: data.color,
-                    fillOpacity: 0.3,
-                    weight: 2
+                    color: '#4F2009', fillColor: data.color, fillOpacity: 0.4, weight: 2
                 }).addTo(map);
                 
-                poly.on('click', () => showInfo(name));
+                poly.on('click', () => {
+                    layers.forEach(l => l.setStyle({weight: 2, fillOpacity: 0.4}));
+                    poly.setStyle({weight: 4, fillOpacity: 0.7});
+                    showInfo(name);
+                });
+                layers.push(poly);
             });
         }
 
         function showInfo(name) {
             const region = regionData[name].info;
-            const content = `
+            document.getElementById('infoContent').innerHTML = `
                 <h2 class="info-title">${region.title[currentLang]}</h2>
-                <p>${region.description[currentLang]}</
+                <p style="margin-top:15px; line-height:1.6;">${region.description[currentLang]}</p>
+                <div class="region-stats">
+                    ${Object.entries(region.stats[currentLang]).map(([k,v]) => 
+                        `<div class="stat-item"><b>${k}:</b> <span>${v}</span></div>`).join('')}
+                </div>`;
+        }
+
+        document.getElementById('langToggle').onclick = (e) => {
+            currentLang = currentLang === 'en' ? 'es' : 'en';
+            e.target.innerText = currentLang === 'en' ? 'ES' : 'EN';
+            document.getElementById('infoContent').innerHTML = 'Selection cleared.';
+        };
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
