@@ -3,204 +3,1376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Regional Map Explorer</title>
+    <title>Marin County Historic Ranchos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #fdfbf5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #D6C69F 0%, #A89968 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #4F2009;
         }
         
         .container {
-            max-width: 1400px; margin: 0 auto;
-            background: #fff; border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(79, 32, 9, 0.12);
-            overflow: hidden; border: 2px solid #D6C69F;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(79, 32, 9, 0.3);
+            overflow: hidden;
         }
         
         .header {
-            background: #4F2009; color: #D6C69F;
-            padding: 25px; text-align: center;
+            background: linear-gradient(135deg, #4F2009 0%, #6B2E11 100%);
+            color: #D6C69F;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
         }
         
         .search-container {
-            padding: 20px; background: #D6C69F;
-            border-bottom: 2px solid #4F2009;
+            padding: 30px;
+            background: #F5F0E8;
+            border-bottom: 2px solid #D6C69F;
         }
         
         .search-box {
-            display: flex; gap: 12px;
-            max-width: 650px; margin: 0 auto;
+            display: flex;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
         }
         
         .search-input {
-            flex: 1; padding: 12px 18px;
-            border: 2px solid #4F2009; border-radius: 4px;
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #D6C69F;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4F2009;
+            box-shadow: 0 0 15px rgba(79, 32, 9, 0.2);
         }
         
         .search-btn {
-            padding: 12px 24px; background: #4F2009;
-            color: #D6C69F; border: none; border-radius: 4px;
-            cursor: pointer; font-weight: bold;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4F2009 0%, #6B2E11 100%);
+            color: #D6C69F;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-
-        .main-content { display: flex; height: 650px; }
-        .map-container { flex: 1; border-right: 2px solid #D6C69F; }
-        #map { width: 100%; height: 100%; }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 32, 9, 0.3);
+        }
+        
+        .main-content {
+            display: flex;
+            height: 600px;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
         
         .info-panel {
-            width: 480px; background: #fcfaf2;
-            overflow-y: auto; padding: 30px;
+            width: 500px;
+            background: white;
+            border-left: 2px solid #D6C69F;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
         
-        .info-header {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 20px;
+        .info-controls {
+            padding: 10px;
+            text-align: right;
+            border-bottom: 1px solid #D6C69F;
+            background: #F5F0E8;
         }
-
-        .info-title {
-            color: #4F2009; font-size: 1.6em;
-            border-bottom: 3px solid #D6C69F; padding-bottom: 5px;
-        }
-
-        .region-stats {
-            background: #D6C69F; color: #4F2009;
-            padding: 18px; border-radius: 6px; margin: 20px 0;
-        }
-
-        .stat-item {
-            display: flex; justify-content: space-between;
-            border-bottom: 1px solid rgba(79, 32, 9, 0.15); padding: 6px 0;
-        }
-
+        
         #langToggle {
-            background: #4F2009; color: #D6C69F;
-            border: none; padding: 6px 12px; border-radius: 4px;
+            padding: 8px 16px;
+            background: #4F2009;
+            color: #D6C69F;
+            border: none;
+            border-radius: 20px;
             cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        #langToggle:hover {
+            background: #6B2E11;
+        }
+        
+        .info-content {
+            padding: 30px;
+            flex-grow: 1;
+        }
+        
+        .info-title {
+            color: #4F2009;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #D6C69F;
+            padding-bottom: 10px;
+        }
+        
+        .info-text {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .region-stats {
+            background: #F5F0E8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4F2009;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #D6C69F;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #4F2009;
+        }
+        
+        .stat-value {
+            color: #6B2E11;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #4F2009;
+            font-size: 1.2em;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        
+        .error {
+            color: #8B0000;
+            background: #FFE5E5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #8B0000;
+        }
+
+        .coordinates-info {
+            background: #F0F8F0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #4F2009;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Regional Map Explorer</h1>
-            <p>Historic Rancho Land Boundaries</p>
+            <h1>Marin County Historic Ranchos</h1>
+            <p>Discover the Mexican land grants of Marin County</p>
         </div>
         
         <div class="search-container">
             <div class="search-box">
-                <input type="text" id="addressInput" class="search-input" placeholder="Search address...">
+                <input type="text" id="addressInput" class="search-input" 
+                       placeholder="Enter an address (e.g., 1125 B St, San Rafael)">
                 <button id="searchBtn" class="search-btn">Search</button>
             </div>
         </div>
         
         <div class="main-content">
-            <div class="map-container"><div id="map"></div></div>
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+            
             <div class="info-panel">
-                <div class="info-header">
-                    <span style="font-weight: bold;">Region Details</span>
+                <div class="info-controls">
                     <button id="langToggle">ES</button>
                 </div>
-                <div id="infoContent">Select a region on the map.</div>
+                <div class="info-content" id="infoContent"></div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-        // Data Cleanup: Snapped shared vertices and standardized language keys
+        // App state variables
+        let map;
+        let regions = [];
+        let currentMarker;
+        let highlightedRegionPolygon = null;
+        let highlightedRegionName = null;
+        let currentLang = 'en';
+        // --- GEOMETRY CLEANUP UTILITIES ---
+
+        const SNAP_TOLERANCE = 0.000005; // ~0.5 meters
+        const ROUND_PRECISION = 6;       // ~11 cm
+        
+        function roundCoord(value) {
+            const factor = Math.pow(10, ROUND_PRECISION);
+            return Math.round(value * factor) / factor;
+        }
+        
+        function snapAndRoundCoordinates(polygons) {
+            const allPoints = [];
+        
+            // Collect all points
+            polygons.forEach(poly => {
+                poly.forEach(([lat, lng]) => {
+                    allPoints.push([lat, lng]);
+                });
+            });
+        
+            // Snap points
+            function findSnap(lat, lng) {
+                for (const [slat, slng] of allPoints) {
+                    if (
+                        Math.abs(lat - slat) < SNAP_TOLERANCE &&
+                        Math.abs(lng - slng) < SNAP_TOLERANCE
+                    ) {
+                        return [slat, slng];
+                    }
+                }
+                return [lat, lng];
+            }
+        
+            // Apply snapping + rounding
+            return polygons.map(poly =>
+                poly.map(([lat, lng]) => {
+                    const [sLat, sLng] = findSnap(lat, lng);
+                    return [
+                        roundCoord(sLat),
+                        roundCoord(sLng)
+                    ];
+                })
+            );
+        }
+
+        // --- DATA ---
+        // FIX: Standardized the data structure. All entries now have a consistent format
+        // with 'en' and 'es' keys for title, description, and stats. This prevents runtime errors.
+        // NOTE: For a real application, this data should be in a separate JSON file.
         const regionData = {
             'Corte Madera de Novato': {
-                coordinates: [[38.16825, -122.694077], [38.133962, -122.724976], [38.120459, -122.70163], [38.112356, -122.70163], [38.112085, -122.694077], [38.111275, -122.68824], [38.106683, -122.684807], [38.105602, -122.677597], [38.10263, -122.67382], [38.10263, -122.658714], [38.105872, -122.653564], [38.104792, -122.632278], [38.108033, -122.632278], [38.110465, -122.627129], [38.120999, -122.626785], [38.121539, -122.630219], [38.136123, -122.630219], [38.139093, -122.636055], [38.145574, -122.633652], [38.150164, -122.641891], [38.146924, -122.654594], [38.151243, -122.666267], [38.149624, -122.674507], [38.16825, -122.694077]],
-                color: '#4F2009',
+                coordinates: [[38.168250396984384,-122.69407654122918],[38.13396247671964,-122.72497558908073],[38.12045887373562,-122.7016296418151],[38.112355513009696,-122.7016296418151],[38.11208538550022,-122.69407654122918],[38.111274996977635,-122.68824005441276],[38.1066826255182,-122.6848068268737],[38.10560202557017,-122.67759704904168],[38.102630293298475,-122.67382049874871],[38.102630293298475,-122.65871429757682],[38.10587217705566,-122.65356445626824],[38.104791565119946,-122.63227844552605],[38.10803335297616,-122.63227844552605],[38.110464599463874,-122.62712860421745],[38.120999065813564,-122.62678528146354],[38.12153925389513,-122.63021850900262],[38.136122821387204,-122.63021850900262],[38.139093190885205,-122.63605499581902],[38.14557357737077,-122.63365173654168],[38.15016350287313,-122.64189148263542],[38.14692358543955,-122.65459442452996],[38.15124344337197,-122.66626739816276],[38.1496235266276,-122.67450714425652],[38.168250396984384,-122.69407654122918]],
+                color: '#e74c3c',
                 info: {
                     title: { en: 'Corte Madera de Novato', es: 'Corte Madera de Novato' },
-                    description: { en: 'Crucial timber resource for the Presidio of San Francisco.', es: 'Recurso maderero crucial para el Presidio de San Francisco.' },
-                    stats: { en: { 'Grantee': 'John Reed', 'Acres': '4,460' }, es: { 'Beneficiario': 'John Reed', 'Acres': '4,460' } }
+                    stats: {
+                        en: { 'Grant Date': 'October 2, 1834', 'Original Grantee': 'John Reed', 'Size': '4460.24 acres', 'Governor': 'Jose Figueroa' },
+                        es: { 'Fecha de Concesión': '2 de octubre de 1834', 'Beneficiario Original': 'John Reed', 'Tamaño': '4460,24 acres', 'Gobernador': 'José Figueroa' }
+                    },
+                    description: {
+                        en: 'Granted in 1834 by Governor José Figueroa to John Reed, this rancho was crucial for its timber resources, supplying wood to the Presidio of San Francisco. Reed was an Irish immigrant who became an influential figure in early Marin County.',
+                        es: 'Otorgado en 1834 por el gobernador José Figueroa a John Reed, este rancho fue crucial por sus recursos madereros, suministrando madera al Presidio de San Francisco. Reed fue un inmigrante irlandés que se convirtió en una figura influyente en los inicios del condado de Marin.'
+                    }
                 }
             },
             'Soullajule': {
-                coordinates: [[38.13407, -122.72525], [38.123403, -122.760441], [38.145547, -122.787907], [38.157696, -122.821037], [38.168898, -122.83992], [38.181097, -122.861275], [38.194806, -122.872261], [38.208835, -122.865051], [38.209105, -122.852348], [38.205058, -122.844109], [38.200202, -122.834496], [38.203979, -122.827972], [38.203979, -122.81424], [38.20236, -122.808403], [38.197504, -122.80291], [38.185631, -122.800163], [38.180774, -122.786087], [38.178884, -122.778191], [38.174566, -122.771324], [38.157021, -122.762054], [38.164579, -122.735275], [38.168628, -122.695107], [38.13407, -122.72525]],
-                color: '#D6C69F',
+                coordinates: [[38.134070493823586,-122.72525024571226],[38.12340287045033,-122.76044082798765],[38.14554657530658,-122.78790664830015],[38.15769575300814,-122.82103729405208],[38.16889820084662,-122.83992004551695],[38.18109746185443,-122.86127472238152],[38.19480570412978,-122.87226105050651],[38.20883508601526,-122.86505127267449],[38.20910485532582,-122.85234833077995],[38.20505821068454,-122.84410858468621],[38.20020194017038,-122.83449554757682],[38.20397906745351,-122.8279724152526],[38.20397906745351,-122.81423950509635],[38.20236032261288,-122.80840301827995],[38.19750387213767,-122.80290985421746],[38.18563118511921,-122.80016327218621],[38.1807736189769,-122.78608703927604],[38.17888447801048,-122.77819061593621],[38.17456625759166,-122.77132416085807],[38.15702085590265,-122.76205444650262],[38.164579392822404,-122.73527527169793],[38.16862828670254,-122.6951065094909],[38.134070493823586,-122.72525024571226]],
+                color: '#2ecc71',
                 info: {
                     title: { en: 'Soullajule', es: 'Soullajule' },
-                    description: { en: 'Historic coastal grant known for its rugged terrain.', es: 'Histórica concesión costera conocida por su terreno escarpado.' },
-                    stats: { en: { 'Grantee': 'Manuel Torrejon', 'Acres': '17,700' }, es: { 'Beneficiario': 'Manuel Torrejón', 'Acres': '17,700' } }
+                    stats: {
+                        en: { 'Grant Year': '1846', 'Original Grantee': 'Manuel Cabello Torrejon', 'Approximate Acres': '17,700', 'Notable Features': 'Soullajule Reservoir' },
+                        es: { 'Año de Concesión': '1846', 'Beneficiario Original': 'Manuel Cabello Torrejón', 'Acres Aproximados': '17,700', 'Características Notables': 'Embalse Soullajule' }
+                    },
+                    description: {
+                        en: 'A historic Mexican land grant in western Marin County, known for its rugged coastal terrain. The name is derived from a Coast Miwok word for the area. Today it includes the Soullajule Reservoir and surrounding parklands.',
+                        es: 'Una histórica concesión de tierras mexicana en el oeste del condado de Marin, conocida por su escarpado terreno costero. El nombre deriva de una palabra Miwok de la Costa para el área. Hoy incluye el Embalse de Soullajule y los parques circundantes.'
+                    }
                 }
             },
             'Laguna de San Antonio': {
-                coordinates: [[38.266166, -122.803253], [38.260774, -122.818359], [38.157993, -122.761711], [38.184444, -122.673477], [38.186063, -122.675537], [38.215741, -122.713989], [38.266166, -122.803253]],
-                color: '#BFAF8A',
+                coordinates: [[38.266165545687045,-122.80325317697137],[38.2607742017911,-122.81835937814323],[38.157992709215904,-122.76171112374871],[38.18444380750062,-122.6734771759948],[38.186062950631374,-122.67553711251824],[38.191729668183555,-122.67279053048699],[38.190650327400974,-122.6786270173034],[38.194158126461524,-122.68103027658073],[38.197395944866685,-122.68652344064323],[38.19766575656877,-122.6902999909362],[38.197395944866685,-122.69750976876824],[38.20063361930768,-122.69956970529168],[38.20063361930768,-122.70300293283073],[38.19793556727113,-122.70574951486198],[38.20360136107342,-122.71124267892448],[38.20845740483092,-122.71295929269402],[38.20953648167321,-122.71536255197137],[38.2157408630576,-122.71398926095574],[38.266165545687045,-122.80325317697137]],
+                color: '#9b59b6',
                 info: {
                     title: { en: 'Laguna de San Antonio', es: 'Laguna de San Antonio' },
-                    description: { en: 'The northernmost Mexican land grant in Marin County.', es: 'La concesión de tierra mexicana más al norte del condado de Marin.' },
-                    stats: { en: { 'Grantee': 'Rafael Cacho', 'Acres': '17,200' }, es: { 'Beneficiario': 'Rafael Cacho', 'Acres': '17,200' } }
+                    stats: {
+                        en: { 'Grant Year': '1845', 'Original Grantee': 'Rafael Cacho', 'Approximate Acres': '17,200', 'Counties': 'Marin, Sonoma' },
+                        es: { 'Año de Concesión': '1845', 'Beneficiario Original': 'Rafael Cacho', 'Acres Aproximados': '17,200', 'Condados': 'Marin, Sonoma' }
+                    },
+                    description: {
+                        en: 'The northernmost Mexican land grant in Marin County, extending into Sonoma County. Granted to Rafael Cacho in 1845, this rancho was named after a lagoon that existed in the area.',
+                        es: 'La concesión de tierra mexicana más al norte del condado de Marin, que se extiende hasta el condado de Sonoma. Otorgada a Rafael Cacho en 1845, este rancho recibió su nombre de una laguna que existía en la zona.'
+                    }
                 }
             },
             'Buacocha': {
-                coordinates: [[38.18806, -122.657684], [38.189949, -122.664894], [38.191838, -122.669357], [38.191568, -122.673134], [38.184282, -122.672447], [38.165389, -122.733559], [38.169168, -122.694763], [38.150811, -122.67382], [38.18806, -122.657684]],
-                color: '#4F2009',
+                coordinates: [
+                    [38.188059842616006,-122.65768432931512],
+                    [38.189948745667955,-122.65940094308463],
+                    [38.189948745667955,-122.66489410714713],
+                    [38.19183759973514,-122.66935730294792],
+                    [38.19156776643893,-122.6731338532409],
+                    [38.186440743869994,-122.67450714425652],
+                    [38.18428188956117,-122.67244720773309],
+                    [38.16538918547039,-122.73355865792838],
+                    [38.16916811810983,-122.69476318673699],
+                    [38.15081146744334,-122.67382049874871],
+                    [38.151891398348354,-122.66558075265495],
+                    [38.188059842616006,-122.65768432931512]
+                ],
+                color: '#1abc9c',
                 info: {
-                    title: { en: 'Buacocha', es: 'Buacocha' },
-                    description: { en: 'Small but significant grant in central Marin.', es: 'Pequeña pero significativa concesión en el centro de Marin.' },
-                    stats: { en: { 'Grant Year': '1834', 'Grantee': 'John Reed' }, es: { 'Año': '1834', 'Beneficiario': 'John Reed' } }
+                    title: 'Rancho de Buacocha',
+                    description: 'Small but significant Mexican land grant in central Marin County.',
+                    details: 'Granted to John Thomas Reed in 1834, this was one of the first Mexican land grants in Marin County. The name comes from the Coast Miwok village that once existed here.',
+                    features: 'Located near present-day Mill Valley and Corte Madera. Known for its redwood groves and creek systems.',
+                    stats: {
+                        'Grant Year': '1834',
+                        'Original Grantee': 'John Thomas Reed',
+                        'Approximate Acres': '8,800',
+                        'Significance': 'First land grant in Marin'
+                    }
                 }
             },
             'Olompali': {
-                coordinates: [[38.187304, -122.656998], [38.187304, -122.651848], [38.180828, -122.642578], [38.181367, -122.631248], [38.1784, -122.623695], [38.182987, -122.608589], [38.164633, -122.567734], [38.142765, -122.58387], [38.187304, -122.656998]],
-                color: '#D6C69F',
+                coordinates: [
+                    [38.18730427097376,-122.6569976838073],
+                    [38.18730427097376,-122.65184784249871],
+                    [38.18541529934465,-122.64704132394401],
+                    [38.18082759288977,-122.64257812814323],
+                    [38.18136733805533,-122.63124847726434],
+                    [38.17839869016438,-122.63090515451043],
+                    [38.17839869016438,-122.62369537667838],
+                    [38.182716683475874,-122.6188888581237],
+                    [38.182986549561086,-122.60858917550652],
+                    [38.180557718807606,-122.60687256173699],
+                    [38.18001796764441,-122.59657287911979],
+                    [38.18730427097376,-122.59210968331902],
+                    [38.18838366134068,-122.5855865509948],
+                    [38.184605725080246,-122.58524322824088],
+                    [38.184335864992796,-122.5807800324401],
+                    [38.1819070792224,-122.57563019113151],
+                    [38.18082759288977,-122.57151031808465],
+                    [38.17677937669912,-122.5687637360534],
+                    [38.17704926477563,-122.56498718576043],
+                    [38.17462023610256,-122.56498718576043],
+                    [38.173810541886084,-122.56739044503777],
+                    [38.164633378729604,-122.56773376779168],
+                    [38.16544317489673,-122.56258392648307],
+                    [38.1624738783073,-122.56155395822135],
+                    [38.15923450773959,-122.56670379952996],
+                    [38.15869459865288,-122.5584640534362],
+                    [38.15329528791563,-122.55640411691276],
+                    [38.149515532546694,-122.55709076242057],
+                    [38.146815587361345,-122.55949402169792],
+                    [38.14411554224382,-122.55743408517448],
+                    [38.141145377195535,-122.55743408517448],
+                    [38.138715152221245,-122.55777740792838],
+                    [38.134394552417376,-122.55537414865104],
+                    [38.13223415659008,-122.55915069894401],
+                    [38.128993442945735,-122.55709076242057],
+                    [38.12494234855876,-122.56052398995963],
+                    [38.14276548221118,-122.58386993722526],
+                    [38.14438555125244,-122.58970642404168],
+                    [38.14762558140994,-122.59348297433465],
+                    [38.14546557729398,-122.60103607492057],
+                    [38.149245542525186,-122.60790252999871],
+                    [38.1516754167422,-122.61408233956902],
+                    [38.1516754167422,-122.61991882638542],
+                    [38.14843556646459,-122.62163544015495],
+                    [38.149515532546694,-122.62712860421745],
+                    [38.14627558633235,-122.63330841378777],
+                    [38.15059548263928,-122.64154815988151],
+                    [38.14789557742748,-122.65390777902215],
+                    [38.15194539776953,-122.66489410714713],
+                    [38.18730427097376,-122.6569976838073]
+                ],
+                color: '#f39c12',
                 info: {
-                    title: { en: 'Rancho Olompali', es: 'Rancho Olompali' },
-                    description: { en: 'Unique grant to Coast Miwok leader Camilo Ynitia.', es: 'Concesión única al líder Coast Miwok Camilo Ynitia.' },
-                    stats: { en: { 'Grant Year': '1843', 'Acres': '8,900' }, es: { 'Año': '1843', 'Acres': '8,900' } }
+                    title: 'Rancho Olompali',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Bolsa de Tomales': {
+                coordinates: [
+                    [38.270963503990465, -122.81046295480338],
+                    [38.26718985455903, -122.80290985421746],
+                    [38.260989861995206, -122.81870270089715],
+                    [38.21110111344384, -122.79261017160026],
+                    [38.2097522938871, -122.7946701081237],
+                    [38.21218015109167, -122.7998199494323],
+                    [38.211370874355616, -122.80634308175652],
+                    [38.214338178393135, -122.81286621408073],
+                    [38.21325917274147, -122.81870270089715],
+                    [38.217575099357695, -122.82659912423699],
+                    [38.21406842848005, -122.82934570626823],
+                    [38.21325917274147, -122.83758545236198],
+                    [38.21325917274147, -122.84170532540887],
+                    [38.2154171680465, -122.84754181222527],
+                    [38.211640634267496, -122.84925842599479],
+                    [38.211640634267496, -122.85200500802604],
+                    [38.2154171680465, -122.85303497628776],
+                    [38.21865404101527, -122.85612488107292],
+                    [38.21703562252938, -122.85784149484245],
+                    [38.2154171680465, -122.85681152658073],
+                    [38.2154171680465, -122.85921478585807],
+                    [38.21811457218635, -122.86779785470574],
+                    [38.21703562252938, -122.87054443673698],
+                    [38.21811457218635, -122.87363434152213],
+                    [38.21703562252938, -122.87672424630729],
+                    [38.21379867756707, -122.87500763253776],
+                    [38.2097522938871, -122.87603760079948],
+                    [38.20894299015477, -122.87912750558463],
+                    [38.21218015109167, -122.88084411935417],
+                    [38.21406842848005, -122.87809753732292],
+                    [38.2154171680465, -122.88084411935417],
+                    [38.21406842848005, -122.88977051095574],
+                    [38.21865404101527, -122.88874054269402],
+                    [38.224048509316994, -122.89148712472526],
+                    [38.22728499830384, -122.89183044747917],
+                    [38.23079103220567, -122.88977051095574],
+                    [38.23186977786691, -122.8935470612487],
+                    [38.23025165337485, -122.89766693429557],
+                    [38.22485764506352, -122.89835357980338],
+                    [38.22755469921946, -122.90213013009635],
+                    [38.22728499830384, -122.90487671212762],
+                    [38.2237787954015, -122.9038467438659],
+                    [38.226745593472614, -122.90796661691277],
+                    [38.22971227054393, -122.90796661691277],
+                    [38.23429689710207, -122.9096832306823],
+                    [38.23483624593148, -122.91414642648307],
+                    [38.22863349288181, -122.91689300851432],
+                    [38.22593647872582, -122.91620636300651],
+                    [38.222430210824626, -122.91963959054557],
+                    [38.2262061846414, -122.91963959054557],
+                    [38.224048509316994, -122.92307281808463],
+                    [38.21919350584448, -122.92684936837762],
+                    [38.2164961417014, -122.93062591867059],
+                    [38.21218015109167, -122.93440246896354],
+                    [38.21487767521961, -122.93680572824088],
+                    [38.217844836271986, -122.93989563302604],
+                    [38.221890769994125, -122.94435882882682],
+                    [38.21951718302793, -122.94772339024351],
+                    [38.21628034845609, -122.95046997227473],
+                    [38.21547111731498, -122.95252990879817],
+                    [38.21924745231321, -122.95476150669859],
+                    [38.22207957494555, -122.95373153843687],
+                    [38.22531615153073, -122.95252990879817],
+                    [38.226934385824315, -122.95373153843687],
+                    [38.229901055195526, -122.95252990879817],
+                    [38.23286760356374, -122.95476150669859],
+                    [38.23542952522925, -122.95733642735289],
+                    [38.23448566985312, -122.95939636387632],
+                    [38.23313728377876, -122.95922470249934],
+                    [38.23448566985312, -122.96094131626887],
+                    [38.23381147994112, -122.96317291416929],
+                    [38.230710125841824, -122.96282959141539],
+                    [38.2317888727031, -122.96832275547789],
+                    [38.230575281359116, -122.97381591954036],
+                    [38.232597922348646, -122.97467422642515],
+                    [38.23529468949701, -122.97312927403254],
+                    [38.23947448093727, -122.97124099888609],
+                    [38.243519211621596, -122.9710693375091],
+                    [38.24823777967152, -122.96866607823179],
+                    [38.25309084439418, -122.96866607823179],
+                    [38.25565205345609, -122.97021103062437],
+                    [38.25929151104565, -122.9707260147552],
+                    [38.26090898923661, -122.97450256504817],
+                    [38.26643510135025, -122.9774208084564],
+                    [38.27007401877713, -122.97827911534117],
+                    [38.26950797708357, -122.9757814411278],
+                    [38.26977752137082, -122.97475147286607],
+                    [38.271057843073976, -122.97333526650621],
+                    [38.27291090030011, -122.97230529824449],
+                    [38.27348365387659, -122.97045993844225],
+                    [38.273079357703295, -122.96887207070543],
+                    [38.27193383965554, -122.96775627175523],
+                    [38.27092307343127, -122.96745586434557],
+                    [38.27001337180154, -122.96505260506822],
+                    [38.26927212501166, -122.9644947055931],
+                    [38.268463483521906, -122.96496677437975],
+                    [38.26782330262413, -122.96496677437975],
+                    [38.26768852697931, -122.96415138283919],
+                    [38.26789069035279, -122.96342182198714],
+                    [38.26755375108438, -122.96264934579085],
+                    [38.266778784835346, -122.96161937752913],
+                    [38.26640814588035, -122.96067523995592],
+                    [38.266778784835346, -122.95960235634993],
+                    [38.26765483302902, -122.95938777962877],
+                    [38.26853087065659, -122.95973110238268],
+                    [38.26906996548327, -122.96063232461165],
+                    [38.26964274935224, -122.96114730874254],
+                    [38.27065353339558, -122.9611043933983],
+                    [38.27196753162074, -122.96067523995592],
+                    [38.27314674055517, -122.96093273202132],
+                    [38.27462914747738, -122.9596452716942],
+                    [38.27429223947054, -122.95840072671129],
+                    [38.27301197478893, -122.95724201241686],
+                    [38.27274244250616, -122.9561691288109],
+                    [38.27294459181201, -122.95453834572984],
+                    [38.27479760089464, -122.95299339333727],
+                    [38.27654949326836, -122.95153427163314],
+                    [38.27718959724613, -122.95041847268294],
+                    [38.277324355259246, -122.9490022663231],
+                    [38.277324355259246, -122.94767189065169],
+                    [38.277998141573214, -122.94629859963607],
+                    [38.27772862779792, -122.94496822396471],
+                    [38.27692008046961, -122.94458198586653],
+                    [38.27594307376836, -122.94423866311263],
+                    [38.27446069366935, -122.94380950967025],
+                    [38.27260767598961, -122.94273662606429],
+                    [38.27216968308367, -122.94183540383531],
+                    [38.27260767598961, -122.93951797524645],
+                    [38.2736184187675, -122.93810176888658],
+                    [38.274494384462216, -122.93664264718248],
+                    [38.274393312036715, -122.93488311806871],
+                    [38.2737531834083, -122.93372440377425],
+                    [38.2732141233445, -122.93175029793932],
+                    [38.273416271337375, -122.93089199105452],
+                    [38.273652109951136, -122.93020534554671],
+                    [38.2736184187675, -122.92930412331773],
+                    [38.27291090030011, -122.92866039315416],
+                    [38.272371833983925, -122.92831707040025],
+                    [38.2705187630026, -122.92775917092513],
+                    [38.268598257728755, -122.92797374764635],
+                    [38.267418974939375, -122.92818832436751],
+                    [38.26563316740852, -122.92814540902327],
+                    [38.26445383647816, -122.9278450016136],
+                    [38.26391470739011, -122.92655754128648],
+                    [38.262465778139614, -122.92466926613997],
+                    [38.26229729611866, -122.92385387459947],
+                    [38.26276904479271, -122.92278099099352],
+                    [38.26418427243429, -122.92192268410872],
+                    [38.26634075677624, -122.92127895394518],
+                    [38.26789069035279, -122.92162227669908],
+                    [38.26944059085547, -122.92123603860091],
+                    [38.270788303538474, -122.92218017617415],
+                    [38.27193383965554, -122.92200851479723],
+                    [38.27270875090047, -122.92054939309313],
+                    [38.272405525745896, -122.9179744724388],
+                    [38.271799071638455, -122.9176311496849],
+                    [38.271192612466585, -122.9179744724388],
+                    [38.2705187630026, -122.91780281106188],
+                    [38.26937320456483, -122.91703033486556],
+                    [38.26883411198894, -122.9159574512596],
+                    [38.269171045317805, -122.91432666817857],
+                    [38.26906996548327, -122.91325378457262],
+                    [38.269171045317805, -122.91235256234361],
+                    [38.26977752137082, -122.91196632424547],
+                    [38.26997967892976, -122.91153717080309],
+                    [38.269811214336386, -122.91007804909898],
+                    [38.27018183592599, -122.90960598031234],
+                    [38.270451377712334, -122.90896225014876],
+                    [38.2700807574982, -122.90780353585436],
+                    [38.27031660694419, -122.90698814431383],
+                    [38.27011445032311, -122.90651607552718],
+                    [38.271192612466585, -122.90522861520006],
+                    [38.271192612466585, -122.90492820779039],
+                    [38.27146215050152, -122.90501403847887],
+                    [38.27200122357031, -122.90475654641341],
+                    [38.27227075860413, -122.90376949349593],
+                    [38.27200122357031, -122.90346908608629],
+                    [38.27213599121227, -122.90278244057848],
+                    [38.27200122357031, -122.90231037179183],
+                    [38.27159691914385, -122.90188121834947],
+                    [38.271057843073976, -122.90222454110338],
+                    [38.26997967892976, -122.90200996438216],
+                    [38.2702087899954, -122.89862823643492],
+                    [38.27007401877713, -122.89450836338804],
+                    [38.270963503990465, -122.81046295480338]
+                ],
+                color: '#12f39c',
+                info: {
+                    title: 'Bolsa de Tomales',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Blucher': {
+                coordinates: [
+                    [38.271826022023056,-122.8114929230651],
+                    [38.3169862362226,-122.88764190830989],
+                    [38.31456187928551,-122.89227676548765],
+                    [38.319410512098735,-122.89519500889585],
+                    [38.31604344037923,-122.9030914322357],
+                    [38.31806370217516,-122.90446472325132],
+                    [38.32008390767828,-122.90034485020445],
+                    [38.321700031549305,-122.90034485020445],
+                    [38.322508079974156,-122.90446472325132],
+                    [38.32210405688764,-122.90875625767515],
+                    [38.32008390767828,-122.9144210831146],
+                    [38.318333066161394,-122.91665268101497],
+                    [38.3169862362226,-122.91648101963804],
+                    [38.3140231222914,-122.91270446934507],
+                    [38.3098476198646,-122.91545105137632],
+                    [38.31146397190486,-122.91648101963804],
+                    [38.31294559629444,-122.91630935826106],
+                    [38.31456187928551,-122.91854095616148],
+                    [38.3146965679086,-122.92094421543882],
+                    [38.31011701437304,-122.92746734776301],
+                    [38.31079049626615,-122.92884063877864],
+                    [38.313619051918884,-122.92660904087828],
+                    [38.31504675797981,-122.92726135332488],
+                    [38.31558550736835,-122.92949295122527],
+                    [38.31450800458832,-122.93155288774871],
+                    [38.31262233619518,-122.932325363945],
+                    [38.31100600997312,-122.93352699358368],
+                    [38.309659043935405,-122.93481445391082],
+                    [38.31033253008142,-122.93687439043426],
+                    [38.31141009490603,-122.9367027290573],
+                    [38.31235295099327,-122.93395614702605],
+                    [38.31343048579658,-122.93361282427215],
+                    [38.314171281685915,-122.93429946977996],
+                    [38.31316110359684,-122.93773269731902],
+                    [38.31235295099327,-122.93756103594207],
+                    [38.312016218083656,-122.93824768144988],
+                    [38.31080396666233,-122.93979263384247],
+                    [38.31093866226541,-122.9407367714157],
+                    [38.31167948361042,-122.94185257036591],
+                    [38.3119488713141,-122.94296836931609],
+                    [38.312891720396365,-122.94382667620086],
+                    [38.31282437443989,-122.94459915239715],
+                    [38.31141009490603,-122.94562912065886],
+                    [38.31107335761831,-122.94777488787079],
+                    [38.31174683063016,-122.94940567095183],
+                    [38.312891720396365,-122.95086479265593],
+                    [38.31329579482182,-122.9520664222946],
+                    [38.31316110359684,-122.954298020195],
+                    [38.313767212139,-122.95644378740691],
+                    [38.315114101872275,-122.95858955461884],
+                    [38.31625893847484,-122.96047782976531],
+                    [38.31686502112296,-122.9623661049118],
+                    [38.31747109870478,-122.9649410255661],
+                    [38.316595651682604,-122.96751594622039],
+                    [38.31497941402479,-122.96768760759736],
+                    [38.313497831190176,-122.96751594622039],
+                    [38.31268968233931,-122.96863174517058],
+                    [38.31120805272103,-122.96880340654754],
+                    [38.310265181748285,-122.97000503618621],
+                    [38.30999578779021,-122.97094917375945],
+                    [38.31060192278862,-122.97240829546355],
+                    [38.31141009490603,-122.97395324785614],
+                    [38.31174683063016,-122.97472572405242],
+                    [38.31100600997312,-122.9766139991989],
+                    [38.31093866226541,-122.97875976641082],
+                    [38.31114070520092,-122.98124885637664],
+                    [38.31114070520092,-122.98253631670379],
+                    [38.30986109043591,-122.98365211565398],
+                    [38.30817735239895,-122.98425293047332],
+                    [38.308244702670926,-122.98622703630829],
+                    [38.30831205288039,-122.98734283525847],
+                    [38.307638547971465,-122.98888778765105],
+                    [38.30635887141421,-122.99034690935517],
+                    [38.30528123153858,-122.99120521623992],
+                    [38.30629151939104,-122.99249267656708],
+                    [38.306426223374835,-122.99369430620574],
+                    [38.30629151939104,-122.99489593584443],
+                    [38.30541593739859,-122.99541091997527],
+                    [38.304068867540956,-122.99420929033661],
+                    [38.302519706278495,-122.99412345964812],
+                    [38.30097051193265,-122.99395179827117],
+                    [38.29975807588951,-122.99420929033661],
+                    [38.29908449155465,-122.99515342790984],
+                    [38.29881505606965,-122.99781417925261],
+                    [38.298006743611055,-122.99995994646453],
+                    [38.29686161887929,-123.00304985124968],
+                    [38.2941401925639,-123.00133323748015],
+                    [38.292590819287426,-122.99978828508759],
+                    [38.291647706314,-122.99978828508759],
+                    [38.29104141293028,-123.000045777153],
+                    [38.29030038080481,-122.99918747026824],
+                    [38.28989617827445,-122.99755668718718],
+                    [38.28915513445528,-122.99695587236785],
+                    [38.288481451690146,-122.99687004167937],
+                    [38.288077239029484,-122.99781417925261],
+                    [38.28733617663825,-122.99695587236785],
+                    [38.286797217419505,-122.99618339617156],
+                    [38.28639299537911,-122.99669838030243],
+                    [38.28571928697598,-122.99626922686005],
+                    [38.2855171732357,-122.99523925859833],
+                    [38.28403498861103,-122.99515342790984],
+                    [38.28268752178058,-122.99463844377898],
+                    [38.2826201477825,-122.99378013689422],
+                    [38.281744280117316,-122.99257850725554],
+                    [38.28134002993848,-122.99060440142058],
+                    [38.2810031530699,-122.98948860247039],
+                    [38.27999251308498,-122.98897361833954],
+                    [38.27844283778345,-122.98888778765105],
+                    [38.27736478328268,-122.989059449028],
+                    [38.27608457277299,-122.98802948076629],
+                    [38.274804339691485,-122.98751449663543],
+                    [38.273726231168474,-122.98674202043914],
+                    [38.27285025620763,-122.98648452837371],
+                    [38.27285025620763,-122.98416709978484],
+                    [38.272243805814085,-122.98262214739226],
+                    [38.27076135019825,-122.98167800981903],
+                    [38.27008749673279,-122.98133468706513],
+                    [38.27035703886923,-122.97824478227996],
+                    [38.27096350501868,-122.97695732195281],
+                    [38.27143519741139,-122.9751548774948],
+                    [38.27278287308068,-122.97309494097136],
+                    [38.27453481406132,-122.97172164995574],
+                    [38.27399575979982,-122.9696617134323],
+                    [38.27244595650799,-122.9678592689743],
+                    [38.271704734546006,-122.96700096208954],
+                    [38.270559194815085,-122.96468353350066],
+                    [38.26873977104514,-122.96485519487761],
+                    [38.267796348183566,-122.96442604143523],
+                    [38.2676615724887,-122.9627094276657],
+                    [38.26692030169673,-122.96176529009247],
+                    [38.267257243903614,-122.95927620012665],
+                    [38.26853761003497,-122.95936203081513],
+                    [38.26914409137737,-122.96116447527312],
+                    [38.27109827458634,-122.96082115251922],
+                    [38.27244595650799,-122.96056366045379],
+                    [38.273456701536716,-122.96090698320769],
+                    [38.27460219556265,-122.95996284563445],
+                    [38.27453481406132,-122.95893287737275],
+                    [38.27359146647764,-122.95764541704558],
+                    [38.272715489891176,-122.95627212602996],
+                    [38.273456701536716,-122.95404052812958],
+                    [38.27500648325761,-122.9528388984909],
+                    [38.27689312940521,-122.95129394609833],
+                    [38.277634298408515,-122.94974899370574],
+                    [38.27756691972085,-122.9484615333786],
+                    [38.27770167703366,-122.94717407305144],
+                    [38.278038569221465,-122.94597244341277],
+                    [38.27709526715641,-122.94459915239715],
+                    [38.27608457277299,-122.94425582964324],
+                    [38.274063141801335,-122.94356918413543],
+                    [38.27278287308068,-122.94185257036591],
+                    [38.27278287308068,-122.94005012590789],
+                    [38.27379361342009,-122.93824768144988],
+                    [38.27453481406132,-122.93661689836884],
+                    [38.274063141801335,-122.93447113115691],
+                    [38.27352408403845,-122.93249702532195],
+                    [38.27352408403845,-122.93112373430633],
+                    [38.274063141801335,-122.92957878191375],
+                    [38.27298502227399,-122.92854881365203],
+                    [38.27136781297143,-122.92769050676726],
+                    [38.269346250699435,-122.9276046760788],
+                    [38.266852913067765,-122.92777633745574],
+                    [38.264359489844985,-122.92777633745574],
+                    [38.26328122626727,-122.92588806230926],
+                    [38.26274208847656,-122.92434310991668],
+                    [38.26408992545103,-122.92202568132781],
+                    [38.26631380178548,-122.92142486650847],
+                    [38.26860499710088,-122.92142486650847],
+                    [38.26981795359597,-122.92151069719695],
+                    [38.270896120141046,-122.92219734270476],
+                    [38.27204165455748,-122.92159652788544],
+                    [38.27298502227399,-122.92056655962372],
+                    [38.27251333994758,-122.91807746965789],
+                    [38.271704734546006,-122.91739082415008],
+                    [38.27130042846895,-122.91781997759247],
+                    [38.27028965342891,-122.9176483162155],
+                    [38.269278864321265,-122.91679000933074],
+                    [38.26867238410427,-122.9161891945114],
+                    [38.269211477880575,-122.91481590349578],
+                    [38.269076704811624,-122.91232681352996],
+                    [38.270154882360686,-122.91164016802215],
+                    [38.269683181652425,-122.90992355425261],
+                    [38.270559194815085,-122.90940857012177],
+                    [38.27035703886923,-122.9074344642868],
+                    [38.27022226792606,-122.90657615740203],
+                    [38.27136781297143,-122.90494537432097],
+                    [38.2721090383722,-122.90468788225554],
+                    [38.272243805814085,-122.90322876055144],
+                    [38.271704734546006,-122.90211296160126],
+                    [38.270626580005306,-122.90202713091277],
+                    [38.269346250699435,-122.90176963884736],
+                    [38.2675941845475,-122.9008255012741],
+                    [38.271826022023056,-122.8114929230651]
+                ],
+                color: '#1269f3',
+                info: {
+                    title: 'Blucher',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Nicasio': {
+                coordinates: [
+                    [38.0277838794344,-122.64680099644465],[38.021428275713,-122.65916061558531],[38.029271281543025,-122.67821502842708],[38.028189537549835,-122.6833648697357],[38.03251641768387,-122.69383621372984],[38.029271281543025,-122.70001602330015],[38.02737821907275,-122.71100235142515],[38.02129304411233,-122.71168899693296],[38.01101471226636,-122.70327758946226],[38.004116602493205,-122.70465088047789],[38.0114204632172,-122.70928573765559],[38.01344918428345,-122.71151733555601],[38.0141254121617,-122.71460724034117],[38.01628929944827,-122.7192420975189],[38.01791217298881,-122.71907043614192],[38.02021118232275,-122.72353363194273],[38.018317885759,-122.72628021397398],[38.018317885759,-122.72816848912043],[38.0210225801623,-122.72902679600523],[38.02386240184988,-122.73143005528257],[38.02521465920892,-122.73091507115168],[38.02683733509654,-122.73297500767515],[38.02873041154306,-122.73297500767515],[38.02873041154306,-122.73623657383723],[38.031569934492964,-122.73812484898374],[38.03346288864512,-122.73863983311458],[38.03535579387813,-122.74069976963801],[38.04116941121587,-122.7412147537689],[38.04360288144215,-122.7437896744232],[38.04441402021245,-122.74602127232359],[38.04603627079502,-122.74945449986262],[38.04738811882288,-122.75031280674742],[38.04860476070566,-122.75065612950132],[38.04982138236922,-122.75391769566343],[38.05522834512946,-122.75494766392515],[38.056039355094384,-122.75683593907164],[38.056039355094384,-122.76061248936458],[38.058742656738374,-122.76524734654234],[38.065230173263735,-122.7657623306732],[38.06685196252018,-122.76765060581968],[38.066716814788585,-122.7657623306732],[38.06941972198461,-122.76301574864192],[38.07063599764165,-122.76473236241148],[38.073473895529126,-122.76473236241148],[38.07725758810241,-122.77056884922789],[38.08023035208528,-122.7715988174896],[38.081041084925104,-122.77468872227476],[38.081851808776086,-122.7793235794525],[38.08023035208528,-122.7793235794525],[38.076717072576514,-122.78121185459895],[38.074825236776256,-122.78207016148374],[38.07441983702372,-122.78756332554624],[38.07685220183252,-122.79288482823179],[38.079149360982974,-122.79339981236262],[38.078473733429234,-122.79734802403257],[38.074825236776256,-122.8012962357025],[38.07158197583798,-122.80181121983333],[38.06833857108998,-122.80060959019468],[38.0660410723858,-122.80438614048765],[38.06455441712981,-122.80696106114195],[38.06617622136568,-122.80884933628843],[38.066311370095875,-122.81245422520445],[38.07050085690063,-122.81193924107356],[38.07239280455489,-122.8152008072357],[38.07171711458164,-122.81708908238218],[38.07644681331548,-122.81777572789],[38.07752784436726,-122.81640243687434],[38.07955473451899,-122.81708908238218],[38.08023035208528,-122.82052230992124],[38.080905963409364,-122.82412719883723],[38.08063571962881,-122.82670211949156],[38.08320299521906,-122.82893371739195],[38.0841488108723,-122.82687378086848],[38.086040405473284,-122.82412719883723],[38.09212019949475,-122.8224105850677],[38.091444691796575,-122.82515716709895],[38.091985098454536,-122.82704544224546],[38.093876490293376,-122.82841873326109],[38.093876490293376,-122.83082199253843],[38.09730788970789,-122.83374023594664],[38.104197222566846,-122.8400917068939],[38.10514276657668,-122.84197998204039],[38.10716889110457,-122.84197998204039],[38.10784425345992,-122.84300995030208],[38.10716889110457,-122.8443832413177],[38.10797932518179,-122.8455848709564],[38.105547995977645,-122.84918975987242],[38.10689874441419,-122.8510780350189],[38.1091949594396,-122.85313797154231],[38.1120313607028,-122.85176468052671],[38.114192354404175,-122.85159301914976],[38.11540788526315,-122.85330963291929],[38.11635328416671,-122.85519790806575],[38.115542942998665,-122.857944490097],[38.11921641720216,-122.86486244280242],[38.12022929130447,-122.8649482734909],[38.121917383586464,-122.86366081316376],[38.12394304280822,-122.8627166755905],[38.1254960101511,-122.86305999834441],[38.127454052324985,-122.86297416765595],[38.129209493762076,-122.86563491899871],[38.129817136731674,-122.86709404070281],[38.1316400352903,-122.86906814653777],[38.13278776287853,-122.87035560686493],[38.13535320634448,-122.87164306719207],[38.13704094891792,-122.8722438820114],[38.139471229650766,-122.87164306719207],[38.14048382273433,-122.87275886614228],[38.14048382273433,-122.87387466509246],[38.14169891588567,-122.8751621254196],[38.14277898169913,-122.87644958574676],[38.14223895079098,-122.87893867571258],[38.143724026170275,-122.88134193498992],[38.147099085065484,-122.88305854875945],[38.1483815665048,-122.88408851702117],[38.14878655595918,-122.88597679216765],[38.14844906490333,-122.88735008318328],[38.150001510831174,-122.88863754351043],[38.15148642819257,-122.88812255937958],[38.152363865151024,-122.88966751177215],[38.15459115771473,-122.89198494036103],[38.157088344246574,-122.89344406206511],[38.15924800417978,-122.89447403032683],[38.16073273328018,-122.89447403032683],[38.161610058992366,-122.89507484514618],[38.16221743214749,-122.89653396685028],[38.163567132154895,-122.89902305681609],[38.16538918752978,-122.90142631609345],[38.16737315118002,-122.901168824028],[38.16818291691273,-122.90245628435517],[38.169330069635436,-122.90271377642058],[38.17121945829335,-122.90365791399383],[38.174053449448266,-122.90365791399383],[38.17472819300441,-122.90425872881316],[38.17486314096596,-122.90614700395965],[38.175875242712394,-122.90614700395965],[38.178304229553355,-122.90803527910614],[38.179316283507404,-122.90880775530242],[38.179316283507404,-122.90966606218718],[38.180800603879376,-122.90992355425261],[38.18302702774054,-122.91009521562958],[38.183836619548664,-122.9122409828415],[38.18525338356444,-122.91292762834931],[38.18808682893724,-122.91327095110321],[38.18909874700338,-122.9143867500534],[38.18977335123747,-122.91696167070769],[38.19125745855935,-122.91799163896941],[38.1937533890386,-122.91902160723113],[38.19707217032788,-122.92060089268492],[38.19901480008294,-122.92125320513153],[38.199621861509996,-122.92185401995086],[38.201982607834424,-122.92211151201629],[38.20312922843003,-122.92417144853972],[38.20447817071626,-122.9242572792282],[38.205624752007054,-122.92623138506316],[38.20926671396243,-122.92605972368621],[38.21358287735161,-122.92605972368621],[38.217224441109025,-122.92442894060517],[38.220124074508945,-122.92296981890105],[38.22342816705111,-122.92090988237763],[38.22720408906876,-122.91833496172332],[38.23010332472966,-122.91661834795379],[38.23306986484751,-122.91576004106902],[38.23630595242339,-122.91284179766082],[38.23650820311531,-122.91052436907195],[38.236575619887596,-122.9081211097946],[38.234283414564544,-122.90829277117156],[38.23185629487943,-122.90606117327117],[38.229563940798705,-122.90709114153289],[38.226260126939124,-122.90528869707488],[38.22572071450796,-122.90348625261689],[38.22882228136226,-122.90254211504363],[38.22848516093655,-122.90099716265107],[38.22659725767739,-122.89773559648894],[38.22828288793114,-122.89627647478484],[38.23199113698702,-122.89636230547332],[38.233137284807505,-122.89344406206511],[38.23347438366999,-122.89069748003386],[38.23226082045222,-122.88820839006804],[38.229563940798705,-122.89001083452605],[38.2253161525596,-122.88983917314911],[38.221877285156786,-122.88700676042937],[38.220056642486476,-122.88640594561005],[38.21675239682816,-122.88889503557586],[38.21601060677128,-122.88640594561005],[38.21621291390038,-122.87730789263153],[38.21331312463885,-122.87893867571258],[38.21162714753052,-122.87816619951629],[38.21149226767455,-122.87541961748504],[38.21297593234182,-122.87387466509246],[38.21587573503943,-122.8741321571579],[38.2174267448634,-122.8752479561081],[38.219652049039254,-122.873788834404],[38.21944975147194,-122.87061309893035],[38.219314886114596,-122.86889648516083],[38.22079839129633,-122.86649322588349],[38.21702213679219,-122.85842514116669],[38.21715700639925,-122.85585022051238],[38.219382318824515,-122.8557643898239],[38.220056642486476,-122.85387611467742],[38.21803365275177,-122.85198783953093],[38.21452700397216,-122.85104370195769],[38.21385262906448,-122.84795379717255],[38.216819831912915,-122.84597969133758],[38.21479675218541,-122.84168815691376],[38.21479675218541,-122.83842659075164],[38.214999062689174,-122.83439254839325],[38.21628034948509,-122.83121681291962],[38.21628034948509,-122.82838440019988],[38.21864055557805,-122.82435035784148],[38.21506649939879,-122.81602478105926],[38.215673426972934,-122.81130409319304],[38.21445956676262,-122.80847168047332],[38.21392006683647,-122.8048667915573],[38.213987504545976,-122.8008327491989],[38.21371775333303,-122.79619789202117],[38.21216666445464,-122.79396629412078],[38.21270617737931,-122.78958892900847],[38.17359462108534,-122.76816558995054],[38.17777795676564,-122.77314376988215],[38.18762808893976,-122.79820633091734],[38.20219844450255,-122.80352783360286],[38.20651502702441,-122.81296920933528],[38.20597546820658,-122.82756042637632],[38.20260313498684,-122.83133697666929],[38.20988717902574,-122.85227966465757],[38.20988717902574,-122.86275100865171],[38.19747688930567,-122.87116241612242],[38.18331038672031,-122.8591461197357],[38.1615830649244,-122.82292556919859],[38.147409583052415,-122.78447342076109],[38.12553652231265,-122.75906753697203],[38.13593379460591,-122.72301864781187],[38.12148523609106,-122.70001602330015],[38.11635328416671,-122.69967270054624],[38.11162616726571,-122.68714142002867],[38.10689874441419,-122.68267822422789],[38.10743903679596,-122.67941665806578],[38.10568307194514,-122.67426681675718],[38.1039270648878,-122.66036224522398],[38.10689874441419,-122.64971923985289],[38.10689874441419,-122.63289642491145],[38.11365211197304,-122.62585830845637],[38.12121514235004,-122.62534332432554],[38.12310577755601,-122.62997818150328],[38.137824048626676,-122.62997818150328],[38.13984926645777,-122.62379837193293],[38.137824048626676,-122.61710357823179],[38.14065933785188,-122.60663223423765],[38.13930921386539,-122.60148239292903],[38.10514276657668,-122.60182571568293],[38.08622956141696,-122.58380127110289],[38.08352727542522,-122.58671951451109],[38.084202856286815,-122.58963775791926],[38.08204097555655,-122.59495926060484],[38.08123025380297,-122.5997657791595],[38.04433290591467,-122.56612014927671],[38.04595515829446,-122.57916641392512],[38.06798719278401,-122.6148719803314],[38.07217658361772,-122.62688827671812],[38.071771169184366,-122.6394195572357],[38.06474362865154,-122.65624237217708],[38.060959288748464,-122.674953462265],[38.04581997196902,-122.68250656285093],[38.0277838794344,-122.64680099644465]
+                ],
+                color: '#2b12f3',
+                info: {
+                    title: 'Nicasio',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Punta de los Reyes': {
+                coordinates: [
+                    [38.06295960543331,-122.82138061680598],[38.064986899299846,-122.8224105850677],[38.067284431108895,-122.82378387608333],[38.070933303918565,-122.82378387608333],[38.07296037683433,-122.82653045811458],[38.077284611299554,-122.83099365391539],[38.079581756867306,-122.83288192906184],[38.08323001621915,-122.8363151566009],[38.08471629191736,-122.83768844761653],[38.08593231319764,-122.83974838414],[38.08809407886683,-122.83974838414],[38.09052598883482,-122.84180832066343],[38.09052598883482,-122.84455490269468],[38.092687618662985,-122.8455848709564],[38.09295781789667,-122.84798813023374],[38.097280869788634,-122.85227966465757],[38.0986317710631,-122.85210800328062],[38.10011773362145,-122.85468292393492],[38.10619635669513,-122.86017608799742],[38.10646650598286,-122.86309433140562],[38.10889780461813,-122.86326599278254],[38.11011342359127,-122.86515426792906],[38.11173421742,-122.86412429966734],[38.11267966387802,-122.86566925205989],[38.112274474037406,-122.86772918858333],[38.11389521991289,-122.86893081822203],[38.11430040076218,-122.87202072300718],[38.116326271290674,-122.87150573887632],[38.1164613273278,-122.8747673050384],[38.1221334553447,-122.87974548497007],[38.12240354568879,-122.88249206700132],[38.09998264736481,-122.91785431065367],[38.03970928778597,-122.85657119908137],[38.06295960543331,-122.82138061680598]
+                ],     
+                color: '#f312ad',
+                info: {
+                    title: 'Punta de los Reyes',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'San Geronimo': {
+                coordinates: [
+                    [38.028459975045614,-122.64738464669792],[38.021428275713,-122.65905762033073],[38.030353009563214,-122.67794037179559],[38.02873041154306,-122.68309021310417],[38.03305725973069,-122.69304657296746],[38.02981214754977,-122.69956970529168],[38.02737821907275,-122.71055603341667],[38.021428275713,-122.71124267892448],[38.011149962832846,-122.70265961007682],[38.004387128828874,-122.70403290109245],[37.99978804538291,-122.70403290109245],[37.99735311972623,-122.69956970529168],[37.99167131214854,-122.69853973702996],[37.9886949515797,-122.69441986398309],[37.9886949515797,-122.68961334542838],[37.98517727886202,-122.68412018136588],[37.985447875058725,-122.68068695382682],[37.98328307754313,-122.67759704904168],[37.98328307754313,-122.67450714425652],[37.97841204962287,-122.66798401193229],[37.97787080434068,-122.6631774933776],[37.97922391006207,-122.66111755685417],[37.977600180202806,-122.65528107003777],[37.976517673672625,-122.65253448800652],[37.977329555067044,-122.64738464669792],[37.97922391006207,-122.64326477365104],[37.983012473363026,-122.64154815988151],[37.983553680725294,-122.63914490060417],[37.992212455641855,-122.63227844552605],[37.993294730652565,-122.62815857247918],[37.99437698969524,-122.6243820221862],[38.003305017497595,-122.62335205392448],[38.00952693956543,-122.61442566232293],[38.01628929944827,-122.61339569406121],[38.028459975045614,-122.64738464669792]
+                ],     
+                color: '#daf312',
+                info: {
+                    title: 'San Geronimo',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Cañada de Herrera': {
+                coordinates: [
+                    [38.02732412755353,-122.59210968331902],[38.02137417980112,-122.60652923898307],[38.01921044264587,-122.60652923898307],[38.0165056813615,-122.6127090485534],[38.00893181872869,-122.61373901681512],[38.00298037768179,-122.62232208566276],[37.99378174589503,-122.62403869943229],[37.971592064071956,-122.61579895333854],[37.977004800283424,-122.55468750314323],[37.990805470953056,-122.55125427560418],[38.00622667813956,-122.56224060372917],[38.02732412755353,-122.59210968331902]
+                ],     
+                color: '#923104',
+                info: {
+                    title: 'Cañada de Herrera',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Angel Island': {
+                coordinates: [
+                    [37.868498097800426,-122.43879890520476],[37.8674139840876,-122.43922805864715],[37.866939679322584,-122.43982887346648],[37.86280632286374,-122.44137382585906],[37.8624675128738,-122.44274711687468],[37.861722125413216,-122.44412040789031],[37.86131554725728,-122.44635200579071],[37.860841203240575,-122.44635200579071],[37.86029909205477,-122.44497871477509],[37.859756976881606,-122.44394874651336],[37.85921485772113,-122.44326210100554],[37.85846943736498,-122.4423179634323],[37.85758847631599,-122.44257545549773],[37.856233131066055,-122.44257545549773],[37.85569098598848,-122.44137382585906],[37.85514883692372,-122.4408588417282],[37.85569098598848,-122.44025802690886],[37.855352143290254,-122.43922805864715],[37.85406452683275,-122.4368247993698],[37.85386121691516,-122.43553733904267],[37.85365790643691,-122.43485069353486],[37.85386121691516,-122.43373489458466],[37.85453891445997,-122.43321991045379],[37.85460668387181,-122.43218994219207],[37.85501329903454,-122.43115997393035],[37.855555449096094,-122.43073082048797],[37.855419911954506,-122.4298725136032],[37.85548768055644,-122.4288425453415],[37.85514883692372,-122.42764091570281],[37.85460668387181,-122.42618179399871],[37.85460668387181,-122.42437934954071],[37.85426783618965,-122.42274856645965],[37.85379344681806,-122.42111778337859],[37.85257357441684,-122.41957283098601],[37.85277688788542,-122.4188861854782],[37.85352236580658,-122.41862869341277],[37.85413229668068,-122.41957283098601],[37.85487776089614,-122.41991615373992],[37.856639737257645,-122.41974449236297],[37.85758847631599,-122.42025947649383],[37.858333905581226,-122.42051696855927],[37.85901156200798,-122.42086029131318],[37.859756976881606,-122.42060279924773],[37.860841203240575,-122.41957283098601],[37.861925413650106,-122.41862869341277],[37.86280632286374,-122.41905784685515],[37.86341617692052,-122.42008781511687],[37.86334841560786,-122.42128944475554],[37.86450034944955,-122.4222335823288],[37.865787783611495,-122.42171859819793],[37.8668719212498,-122.42231941301726],[37.86795604293781,-122.42292022783661],[37.86937892844729,-122.42292022783661],[37.87019199354447,-122.42386436540984],[37.87053076802021,-122.42480850298308],[37.87053076802021,-122.4258384712448],[37.87046301324967,-122.42678260881806],[37.8713438204066,-122.42798423845672],[37.87147932826536,-122.4288425453415],[37.87229237018396,-122.43004417498015],[37.87181809682183,-122.43193245012664],[37.87059852272844,-122.4324474342575],[37.87046301324967,-122.43313407976531],[37.869717706661476,-122.43450737078095],[37.868836880064585,-122.43476486284636],[37.86836258445862,-122.4353656776657],[37.86761725662372,-122.43459320146941],[37.8668719212498,-122.43553733904267],[37.86666864665757,-122.43742561418914],[37.868498097800426,-122.43879890520476]
+                ],     
+                color: '#04923a',
+                info: {
+                    title: 'Angel Island',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Baulines': {
+                coordinates: [
+                    [37.89420047077474,-122.63959121861265],[37.90666228164869,-122.61504364170833],[37.908287579675836,-122.61607360997007],[37.9077458176558,-122.6177902237396],[37.916955229475064,-122.62808990635679],[37.920205334857656,-122.62894821324156],[37.92480940496536,-122.63838958897398],[37.93090258394362,-122.6449127212982],[37.93306892589201,-122.64577102818293],[37.93469364045938,-122.65126419224546],[37.937536804544365,-122.65589904942317],[37.941192139627226,-122.65933227696226],[37.94484729290714,-122.66276550450132],[37.94674248599486,-122.66585540928648],[37.94877299577313,-122.66997528233335],[37.950668087604,-122.67272186436458],[37.953781346631395,-122.67821502842708],[37.95919539589321,-122.68199157872007],[37.96366168610122,-122.68834304966731],[37.92697592645289,-122.73846817173765],[37.92291364588035,-122.73503494419859],[37.91871572063185,-122.73246002354429],[37.91275696371312,-122.73108673252867],[37.911131764415764,-122.72902679600523],[37.9070686091014,-122.72748184361262],[37.90584961875247,-122.72782516636653],[37.9051182148532,-122.7272758491745],[37.90362829552727,-122.72736167986297],[37.90234152274248,-122.72461509783172],[37.90254469888851,-122.72358512957],[37.90186744288698,-122.72264099199676],[37.90173199093879,-122.71937942583465],[37.90085154719875,-122.71689033586883],[37.89990336523783,-122.71345710832976],[37.896584632178154,-122.71028137285613],[37.89577185841466,-122.7100238807907],[37.89529773624155,-122.70830726702117],[37.8944172155326,-122.70650482256316],[37.89387535139981,-122.70418739397431],[37.893739884743376,-122.70255661089324],[37.89401081780693,-122.70126915056609],[37.89482361101473,-122.7004966743698],[37.895907321331805,-122.70066833574676],[37.89773604631398,-122.69929504473114],[37.89915835655612,-122.69697761614226],[37.900106548114955,-122.69543266374968],[37.900987000767394,-122.69405937273407],[37.901596538741266,-122.69148445207976],[37.90288332455208,-122.68959617693329],[37.903966916204745,-122.68710708696747],[37.90484732267406,-122.68410301287078],[37.90532815560773,-122.68357086220931],[37.905971518700945,-122.6832275394554],[37.90570062966309,-122.68052387276842],[37.906208545791024,-122.6791505817528],[37.906310128595905,-122.6760177616234],[37.906310128595905,-122.6725416187401],[37.906310128595905,-122.6705245975609],[37.90600537976056,-122.66829299966051],[37.90600537976056,-122.66704845467757],[37.90563290724779,-122.66537475625228],[37.90542973962799,-122.6629285816307],[37.90495567966699,-122.66138362923814],[37.90471864854122,-122.6606540683861],[37.904583201840865,-122.65962410012438],[37.90441389311482,-122.65923786202623],[37.90390596459942,-122.65713501015856],[37.90299168443698,-122.65473175088121],[37.901975804267686,-122.65211391488265],[37.901332406240705,-122.65022563973619],[37.900993773440895,-122.65005397835921],[37.90051968490357,-122.64885234872057],[37.8995714986672,-122.6470928196068],[37.8978444137775,-122.64365959206773],[37.89420047077474,-122.63959121861265]
+                ],     
+                color: '#920439',
+                info: {
+                    title: 'Baulines',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Saucelito': {
+                coordinates: [
+                    [37.894200472841796,-122.63873291172789],[37.89569058302836,-122.63838958897398],[37.933339716212906,-122.56234359898372],[37.93157957472607,-122.55976867832945],[37.93130877998759,-122.55753708042903],[37.92900698443833,-122.55633545079039],[37.92521563467283,-122.5561637894134],[37.921288673469384,-122.55067062535093],[37.91925740435633,-122.55101394810484],[37.917496925745326,-122.55049896397395],[37.917361502568355,-122.5489540115814],[37.915465551910856,-122.5489540115814],[37.914788414832785,-122.54689407505796],[37.91329869132014,-122.54586410679624],[37.91126720154817,-122.54620742955015],[37.91004828075822,-122.5434608475189],[37.90422426936092,-122.54243087925718],[37.903411579959325,-122.53865432896418],[37.90056709637657,-122.5350494400482],[37.894877799393136,-122.53230285801695],[37.8905428017749,-122.52474975743098],[37.888375207243385,-122.52045822300718],[37.885394660567634,-122.52131652989195],[37.8830914282324,-122.51959991612242],[37.88227850550338,-122.51651001133726],[37.88114039736725,-122.51432991106414],[37.87964999269406,-122.51252746660613],[37.87822730555357,-122.51329994280243],[37.875246348153354,-122.50978088457488],[37.87328156027469,-122.50600433428193],[37.87233302323327,-122.50385856707],[37.87111345766366,-122.49965286333465],[37.87084244035108,-122.49682045061492],[37.86921631554012,-122.4965629585495],[37.867725669602684,-122.49664878923797],[37.866234993509,-122.49484634477997],[37.86481204728867,-122.49347305376435],[37.864202204783105,-122.49072647173308],[37.86359235723086,-122.48840904314422],[37.86169502146169,-122.4877223976364],[37.860949626188344,-122.48488998491668],[37.85959434274124,-122.48283004839324],[37.85837456633162,-122.4807701118698],[37.85925551798561,-122.47845268328095],[37.85823903437342,-122.47853851396941],[37.85661263143715,-122.47853851396941],[37.854240729496965,-122.47853851396941],[37.85132657406698,-122.47888183672332],[37.849700018623565,-122.47939682085418],[37.84780232525456,-122.47956848223113],[37.846989013145524,-122.4781951912155],[37.84556569536959,-122.47707939226532],[37.84312565812595,-122.47690773088836],[37.84210895211408,-122.47656440813445],[37.841837828143795,-122.47519111711883],[37.83939766756143,-122.4741611488571],[37.83783863381395,-122.47278785784148],[37.836618497461444,-122.47167205889129],[37.83499161759782,-122.47167205889129],[37.83370364559438,-122.47253036577607],[37.83173775023716,-122.47253036577607],[37.832008911331805,-122.47356033403778],[37.83214449150541,-122.47579193193816],[37.83126321592353,-122.47647857744597],[37.8302463464028,-122.47828102190398],[37.82895829155836,-122.4781951912155],[37.82685668012055,-122.47828102190398],[37.82475500882816,-122.47759437639617],[37.82495839898847,-122.4796543129196],[37.82556856610611,-122.4815425880661],[37.82550077000884,-122.48240089495086],[37.826585500091255,-122.48334503252411],[37.82685668012055,-122.4844608314743],[37.82631431906545,-122.48574829180146],[37.82672109023048,-122.48815155107879],[37.826653295191996,-122.4914131172409],[37.825432973849296,-122.49149894792937],[37.82489060233063,-122.49218559343718],[37.82461941507654,-122.49347305376435],[37.82360245399844,-122.49390220720672],[37.82272107639546,-122.49493217546843],[37.821907487727444,-122.49596214373015],[37.822517680069275,-122.49664878923797],[37.82231428318252,-122.49870872576142],[37.821636289511794,-122.49999618608855],[37.82089048928055,-122.49973869402314],[37.82021248253092,-122.49930954058074],[37.8199412780872,-122.50033950884246],[37.82082268888583,-122.50188446123504],[37.8214769591643,-122.50160121937373],[37.821510859068944,-122.50215911884882],[37.821409159308324,-122.50207328816035],[37.82122270938324,-122.50230932255366],[37.82101930892781,-122.50282430668452],[37.820866758218386,-122.5033607484875],[37.82118880934626,-122.50340366383173],[37.821053209042645,-122.50368261356925],[37.82088370831278,-122.50417614002802],[37.82091760848991,-122.50488424320795],[37.82125660940465,-122.50494861622431],[37.82161255868942,-122.50479841251948],[37.82174815796541,-122.50441217442133],[37.82179900762967,-122.5048198701916],[37.82186680712754,-122.50529193897822],[37.82213800449618,-122.50563526173212],[37.822375301376326,-122.50589275379755],[37.8233990601012,-122.50634765703583],[37.82360245399844,-122.5082359321823],[37.82421263232692,-122.50943756182097],[37.82468721198348,-122.51089668352509],[37.82476178788849,-122.51143741646956],[37.82435500592363,-122.51225280801012],[37.82469399105007,-122.51246738473128],[37.82493127971212,-122.51319694558333],[37.82503297461942,-122.51392650643538],[37.82513466938662,-122.51517105141832],[37.82523636401365,-122.51602935830306],[37.824965178030126,-122.51675891915511],[37.82469399105007,-122.51701641122054],[37.82510077114645,-122.51735973397444],[37.82547365093179,-122.51838970223616],[37.82547365093179,-122.51894760171129],[37.824965178030126,-122.51937675515367],[37.82523636401365,-122.52002048531725],[37.82533805850058,-122.52066421548082],[37.82513466938662,-122.52182292977525],[37.82506687289074,-122.5230245594139],[37.82469399105007,-122.52383995095445],[37.824016019240155,-122.52349662820055],[37.823744828772284,-122.52388286629869],[37.823812626482685,-122.52431201974107],[37.82316854571934,-122.52465534249498],[37.82279565428727,-122.52418327370836],[37.82252445933511,-122.52444076577376],[37.82252445933511,-122.52525615731432],[37.82208376541255,-122.52581405678939],[37.82143966956157,-122.52551364937975],[37.82103286928597,-122.52581405678939],[37.82093116886675,-122.52628612557604],[37.82116846962697,-122.52705860177232],[37.82099896916179,-122.52757358590316],[37.82055826613068,-122.52808857003404],[37.82015146099723,-122.52877521554186],[37.819473447459046,-122.52911853829576],[37.8189310321444,-122.52937603036119],[37.81825300739596,-122.52924728432845],[37.81726986044844,-122.52843189278795],[37.81696474321613,-122.52894687691878],[37.816422309466994,-122.52843189278795],[37.815710359122534,-122.52791690865706],[37.81506620765643,-122.52791690865706],[37.815506943477274,-122.52856063882064],[37.81547304081525,-122.52894687691878],[37.815235721745054,-122.52946186104967],[37.81547304081525,-122.52993392983626],[37.81587987173208,-122.5296335224266],[37.81608328634976,-122.52907562295152],[37.816524016098576,-122.52937603036119],[37.816930841223595,-122.5296335224266],[37.817202056728036,-122.53066349068831],[37.81801569726267,-122.53049182931139],[37.81849031676635,-122.53049182931139],[37.81886322994983,-122.53100681344222],[37.81886322994983,-122.53147888222887],[37.81927004218316,-122.5315217975731],[37.81977855432193,-122.5319938663597],[37.82004975936351,-122.53156471291734],[37.82082946830737,-122.53186512032701],[37.821405769624256,-122.53216552773668],[37.82150746938954,-122.53323841134264],[37.821914267049344,-122.53349590340804],[37.822117665038476,-122.53405380288316],[37.822558358758634,-122.53413963357161],[37.82279565428727,-122.53388214150621],[37.823371940251846,-122.53422546426009],[37.823710929893736,-122.53474044839098],[37.82333804120203,-122.53495502511217],[37.82330414213662,-122.53529834786607],[37.823744828772284,-122.53538417855455],[37.823744828772284,-122.53598499337389],[37.823710929893736,-122.5366716388817],[37.82333804120203,-122.53714370766832],[37.82354143526743,-122.53752994576647],[37.824016019240155,-122.53783035317613],[37.82438890450636,-122.53774452248766],[37.823982120486164,-122.53718662301256],[37.824490600161056,-122.53684330025865],[37.82466009260749,-122.53619957009505],[37.824592295675636,-122.53572750130846],[37.82452449868147,-122.53478336373522],[37.825541447054,-122.53439712563707],[37.826558381412845,-122.53452587166976],[37.82781258115534,-122.53486919442366],[37.82869389795146,-122.53542709389879],[37.82923624151717,-122.53555583993148],[37.83021922906977,-122.5366716388817],[37.83106662162168,-122.5380449298973],[37.83154115719973,-122.53937530556868],[37.8319140044414,-122.5400619510765],[37.83143947126137,-122.54074859658431],[37.83143947126137,-122.54122066537096],[37.83147336658973,-122.54190731087877],[37.83221905987405,-122.54190731087877],[37.83198179464656,-122.54233646432115],[37.83221905987405,-122.54345226327135],[37.83255800887548,-122.54379558602525],[37.83299864024936,-122.54431057015609],[37.83299864024936,-122.5450830463524],[37.83367652953199,-122.54538345376204],[37.83408326011179,-122.54611301461412],[37.83398157767708,-122.54667091408919],[37.83404936598247,-122.54718589822008],[37.833879895102214,-122.54804420510484],[37.833879895102214,-122.54911708871077],[37.83482892701754,-122.54958915749742],[37.83530343839706,-122.54898834267809],[37.83581184005959,-122.5488166813011],[37.83591351997167,-122.54941749612047],[37.836523596500896,-122.54941749612047],[37.836794740005466,-122.54976081887438],[37.83787930405754,-122.55010414162828],[37.83852325641863,-122.55010414162828],[37.83855714849245,-122.5507907871361],[37.83872660862788,-122.55130577126693],[37.83909941955545,-122.55156326333235],[37.83954001185874,-122.55130577126693],[37.84045507977165,-122.55156326333235],[37.841268463941496,-122.55216407815172],[37.841539590004764,-122.55250740090563],[37.84086177297782,-122.5530653003807],[37.84140402709771,-122.55358028451158],[37.84174293389818,-122.55336570779036],[37.84214962000309,-122.55409526864241],[37.841810715071404,-122.55478191415023],[37.84147180858239,-122.55538272896956],[37.84214962000309,-122.55551147500228],[37.842352962214605,-122.55615520516585],[37.842657974480694,-122.556541443264],[37.84289520537112,-122.55585479775618],[37.84370856263078,-122.55551147500228],[37.84438635349494,-122.55594062844469],[37.844284685262444,-122.55649852791976],[37.84462357882571,-122.5568847660179],[37.84462357882571,-122.55757141152571],[37.84492858170115,-122.55752849618148],[37.845098027197984,-122.55873012582018],[37.84543691702364,-122.55980300942613],[37.84648746558625,-122.55967426339339],[37.84655524239893,-122.55898761788558],[37.84723300709962,-122.55881595650865],[37.84763966292987,-122.55903053322984],[37.84794465333086,-122.55907344857408],[37.847876877795215,-122.55993175545882],[37.848046316517525,-122.56070423165511],[37.848486855373395,-122.56104755440901],[37.848859616964894,-122.56070423165511],[37.84913071512055,-122.56160545388414],[37.85024898447681,-122.5615625385399],[37.85079116957479,-122.56194877663805],[37.85092671522633,-122.56242084542464],[37.85187552780974,-122.56194877663805],[37.852044957343324,-122.56289291421129],[37.852417700946646,-122.56387996712874],[37.85319706784582,-122.5650386814232],[37.85329872379048,-122.5658540729637],[37.8538070014112,-122.5661544803734],[37.85394254151824,-122.56679821053697],[37.853637575926996,-122.56722736397936],[37.85319706784582,-122.56765651742171],[37.85377311634552,-122.56804275551985],[37.853637575926996,-122.56890106240465],[37.85373923126425,-122.56988811532213],[37.85340037959497,-122.57023143807604],[37.853671461055015,-122.57074642220687],[37.85421362098471,-122.57031726876451],[37.85465412299176,-122.57057476082994],[37.85478966154132,-122.57160472909166],[37.855738424410674,-122.57370758095934],[37.85692436082603,-122.57383632699205],[37.85739873004992,-122.57417964974596],[37.85841522525009,-122.57490921059801],[37.858991232974525,-122.57606792489241],[37.85960111860007,-122.5777416233177],[37.85953335377976,-122.57902908364488],[37.85943170643252,-122.58040237466051],[37.858957350291824,-122.58035945931627],[37.85834745933951,-122.58040237466051],[37.85777144658425,-122.58074569741441],[37.857602030211375,-122.58121776620101],[37.856890477193204,-122.58121776620101],[37.856822709880866,-122.58164691964339],[37.85712766229575,-122.58211898843004],[37.85756814689007,-122.58297729531478],[37.857737563340834,-122.58246231118395],[37.858245810356856,-122.58220481911852],[37.85851687399912,-122.58302021065901],[37.85885570215021,-122.58374977151107],[37.858991232974525,-122.58452224770738],[37.85939782395228,-122.5852088932152],[37.860177117057134,-122.58516597787093],[37.86054981954253,-122.58675384560777],[37.86088863834833,-122.58752632180403],[37.861362982059745,-122.58877086678697],[37.86248106587198,-122.58877086678697],[37.86275211393869,-122.5892858509178],[37.86370077432195,-122.59053039590074],[37.864784942664116,-122.59057331124498],[37.86539478034733,-122.59164619485094],[37.86583521553548,-122.59237575570296],[37.866377285999484,-122.59271907845687],[37.86759692996398,-122.59370613137438],[37.867698566049825,-122.59439277688219],[37.86854552797982,-122.59452152291487],[37.86865055027053,-122.59513521214106],[37.86992097310078,-122.59633684177973],[37.8715199817633,-122.59749984819793],[37.87253628219882,-122.59878730852508],[37.87314605573078,-122.59990310747528],[37.8743655876535,-122.60144805986785],[37.87517859771953,-122.60230636675263],[37.875517349265536,-122.60402298052216],[37.87477209380809,-122.60470962602996],[37.875923849064485,-122.60694122393035],[37.876736841932775,-122.60779953081511],[37.87707558631301,-122.60917282183074],[37.87788856646982,-122.61157608110808],[37.87754982582829,-122.61320686418914],[37.87856604307951,-122.61329269487761],[37.87721108362894,-122.61578178484343],[37.8766690928698,-122.6177558906784],[37.87741432913547,-122.62015914995575],[37.87775307040013,-122.62127494890593],[37.879379006785925,-122.62153244097138],[37.88005646968686,-122.62359237749482],[37.88100490727957,-122.624708176445],[37.8804629444364,-122.62668228227996],[37.88100490727957,-122.62839889604949],[37.88317271877137,-122.62891388018035],[37.88412111623372,-122.62848472673798],[37.88527272530366,-122.62917137224579],[37.88662753644663,-122.63140297014617],[37.88838875366706,-122.63363456804656],[37.889540295995644,-122.6334629066696],[37.89048861144905,-122.63466453630828],[37.89130144354455,-122.63569450457],[37.89265614376148,-122.63663864214324],[37.894200472841796,-122.63873291172789]
+                ],     
+                color: '#045d92',
+                info: {
+                    title: 'Saucelito',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Novato': {
+                coordinates: [
+                    [38.126994928671756,-122.55949402169792],[38.12807521211548,-122.56361389474479],[38.14589758076173,-122.58318329171745],[38.14616758317496,-122.58730316476434],[38.148057572086444,-122.59245300607293],[38.14724758283461,-122.60000610665885],[38.15426719087882,-122.61476898507684],[38.15156742157968,-122.61957550363151],[38.15156742157968,-122.62609863595573],[38.14751758025121,-122.63365173654168],[38.142117442049745,-122.6350250275573],[38.138067076086024,-122.63056183175652],[38.13968724945165,-122.62335205392448],[38.13779704369439,-122.61682892160026],[38.14049732264445,-122.60549927072135],[38.13968724945165,-122.60172272042838],[38.10484559527192,-122.60103607492057],[38.085391861792274,-122.58489990548698],[38.08518919148528,-122.58024787981414],[38.08782386165403,-122.57921791155242],[38.090390884848006,-122.57175064165496],[38.09140415866238,-122.57132148821258],[38.09451144410604,-122.5683174141159],[38.09471408856818,-122.56599998552704],[38.095659755295614,-122.56488418657683],[38.09707823244356,-122.56531334001923],[38.09809141355002,-122.56548500139617],[38.09937475611944,-122.56694412310027],[38.100185276656134,-122.56874656755828],[38.100590533553124,-122.56694412310027],[38.10025281962838,-122.5639400490036],[38.099239668489275,-122.56076431352997],[38.09971247410229,-122.55836105425263],[38.09971247410229,-122.55647277910613],[38.10173874922225,-122.55484199602509],[38.102076456279335,-122.55269622881316],[38.10390004741604,-122.55261039812468],[38.103629888638146,-122.54222488481902],[38.10403512643038,-122.54136657793426],[38.10423774448364,-122.53407096941375],[38.10268432504872,-122.53286933977509],[38.10194137364379,-122.52711868364715],[38.10268432504872,-122.52651786882781],[38.10335972886128,-122.52849197466277],[38.10781723743677,-122.53347015459441],[38.112274474037406,-122.5335559852829],[38.11213941025767,-122.53089523394011],[38.110586158839745,-122.52883529741668],[38.11045109193808,-122.52462959368133],[38.10964068528335,-122.52265548784636],[38.10754709314396,-122.52265548784636],[38.10626389411072,-122.51862144548797],[38.10572359303784,-122.51467323381804],[38.10444036197498,-122.5093517311325],[38.10720941137313,-122.50660514910125],[38.10720941137313,-122.50411605913543],[38.108492593798225,-122.50351524431609],[38.10977575368352,-122.50085449297332],[38.113287444424266,-122.50042533953095],[38.114773108911976,-122.50145530779267],[38.1151107557172,-122.50660514910125],[38.11693402149081,-122.50797844011687],[38.117001548978614,-122.50943756182097],[38.11882476754629,-122.51269912798308],[38.12071546464667,-122.51364326555634],[38.12152574841754,-122.51295662004853],[38.12314628898331,-122.51347160417937],[38.12314628898331,-122.51527404863738],[38.125779590688744,-122.51673317034148],[38.12638726220936,-122.51836395342254],[38.123889024722,-122.5192222603073],[38.12267363503375,-122.51879310686492],[38.12145822511341,-122.52068138201142],[38.12314628898331,-122.52308464128876],[38.124564232473105,-122.5232563026657],[38.12658981825883,-122.52222633440398],[38.12719748303517,-122.52523040850068],[38.12989815417586,-122.5262603767624],[38.12983063861508,-122.52995109636687],[38.13091088009368,-122.53209686357879],[38.13091088009368,-122.53372764665984],[38.13178856452336,-122.53441429216765],[38.13192359196042,-122.53613090593718],[38.132936289775984,-122.53801918108367],[38.135096664819784,-122.53896331865691],[38.135096664819784,-122.5411949165573],[38.1340164852916,-122.54213905413054],[38.13037076135274,-122.53844833452607],[38.128210246421915,-122.53698921282195],[38.127535072391936,-122.53930664141082],[38.13010070048349,-122.5416240699997],[38.130573306348964,-122.54385566790008],[38.130573306348964,-122.54771804888152],[38.12969560730616,-122.5485763557663],[38.12868286452723,-122.54806137163543],[38.127467554645484,-122.5482330330124],[38.12780514275329,-122.5507221229782],[38.12638726220936,-122.55115127642058],[38.126049667544585,-122.54977798540496],[38.12442919142245,-122.54977798540496],[38.12280867933158,-122.55295372087859],[38.12186336400151,-122.55595779497527],[38.12031031938929,-122.55827522356414],[38.11875724174443,-122.55861854631804],[38.11740671259419,-122.55690193254851],[38.114773108911976,-122.55604362566375],[38.11335497528386,-122.55836105425263],[38.11551592982289,-122.56110763628388],[38.11828455938296,-122.56110763628388],[38.1207829886377,-122.56076431352997],[38.12240354568879,-122.56007766802216],[38.12395654577811,-122.56016349871062],[38.12517191411,-122.55853271562957],[38.126994928671756,-122.55949402169792]
+                ],     
+                color: '#5d9204',
+                info: {
+                    title: 'Novato',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Punta de Quentin': {
+                coordinates: [
+                    [37.97153793552019,-122.61590194859312],[37.96084660108361,-122.61624527134703],[37.94717566570979,-122.60337066807554],[37.93363757966208,-122.56234359898372],[37.932012841753746,-122.56062698521418],[37.930929663198796,-122.55685043492122],[37.929304865442695,-122.55633545079039],[37.92903406232564,-122.54706573643489],[37.93052346712617,-122.54414749302671],[37.930252668497594,-122.53899765171809],[37.929169464008865,-122.53607940830992],[37.929169464008865,-122.53350448765562],[37.93404375852836,-122.52680969395442],[37.93783465305219,-122.5324745193939],[37.9427083730111,-122.53831100621028],[37.94812323833633,-122.54517746128843],[37.94974762012134,-122.54534912266536],[37.950559797546,-122.54380417027281],[37.95326699078191,-122.54500579991148],[37.95313163348952,-122.54019928135679],[37.94947689231789,-122.53831100621028],[37.950289072735394,-122.53710937657164],[37.95191340663446,-122.53693771519465],[37.951778046847956,-122.53453445591731],[37.94920616351681,-122.53007126011656],[37.94758176976042,-122.53144455113218],[37.94338525299876,-122.53144455113218],[37.94338525299876,-122.5261230484466],[37.94460362126488,-122.52320480503843],[37.94568659832042,-122.52131652989195],[37.94528048379506,-122.51668167271418],[37.94473899426973,-122.51462173619075],[37.9427083730111,-122.51462173619075],[37.942843749507404,-122.50878524937437],[37.94717566570979,-122.50603866734312],[37.94121921509192,-122.49882888951109],[37.940677695639685,-122.49436569371028],[37.93918849657181,-122.49282074131773],[37.93688694775037,-122.49076080479429],[37.93973002699696,-122.49058914341734],[37.93905311334205,-122.48801422276301],[37.9427083730111,-122.48681259312437],[37.944332874507054,-122.4876709000091],[37.94582196933009,-122.49076080479429],[37.94866470292178,-122.49264907994075],[37.94825860485678,-122.49505233921809],[37.950018346927195,-122.49968719639585],[37.95448519518978,-122.50603866734312],[37.956650842031586,-122.51153183140562],[37.95651549097461,-122.51376342930601],[37.95908711840585,-122.51496505894465],[37.961658655794366,-122.51548004307554],[37.96192933870248,-122.5185699478607],[37.9662601295399,-122.52337646641539],[37.96883141574578,-122.52732467808531],[37.970725990064786,-122.53316116490171],[37.97654473405279,-122.55496215977476],[37.97153793552019,-122.61590194859312]
+                ],     
+                color: '#8cdc06',
+                info: {
+                    title: 'Punta de Quentin',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'San Jose': {
+                coordinates: [
+                    [38.03827617697357,-122.51462173619075],[38.03827617697357,-122.51633834996028],[38.036653754463366,-122.51822662510679],[38.03895217574496,-122.52286148228453],[38.038816976489876,-122.52904129185484],[38.04408956248212,-122.54483413853453],[38.04381918269232,-122.56577682652281],[38.080987033049915,-122.59907913365168],[38.081932877368,-122.59650421299742],[38.084364992290695,-122.59015274205015],[38.084094761294416,-122.58586120762632],[38.0859863572938,-122.58397293247984],[38.08531079291223,-122.5793380753021],[38.087337467329334,-122.5789947525482],[38.08963429708261,-122.5738449112396],[38.08963429708261,-122.57229995884703],[38.09152574975162,-122.57109832920833],[38.09503831771433,-122.56800842442317],[38.09463303002619,-122.5654335037689],[38.09611907389502,-122.56457519688414],[38.097469996645856,-122.5616569534759],[38.094362836985475,-122.55753708042903],[38.09179595328035,-122.55719375767512],[38.09152574975162,-122.55942535557554],[38.09017471712511,-122.56028366246028],[38.087742795470774,-122.55908203282164],[38.08747257695951,-122.55667877354429],[38.088283229496845,-122.55564880528257],[38.087607686339986,-122.55238723912046],[38.09003961248906,-122.55015564122004],[38.09003961248906,-122.54620742955015],[38.088013012983204,-122.54723739781187],[38.08679702631154,-122.54500579991148],[38.08531079291223,-122.54586410679624],[38.08368941292724,-122.54500579991148],[38.08504056541171,-122.54191589512632],[38.0847703369124,-122.54002761997981],[38.08314894494198,-122.539340974472],[38.079770929520414,-122.54466247715757],[38.07693327596719,-122.54466247715757],[38.07598736698058,-122.54122924961851],[38.07598736698058,-122.53985595860289],[38.077473789895166,-122.53865432896418],[38.07612249758486,-122.53556442417903],[38.075176578111694,-122.53453445591731],[38.07693327596719,-122.53161621250914],[38.07450091385484,-122.52766800083921],[38.07396037795517,-122.52595138706968],[38.07071707866709,-122.52457809605406],[38.06517610970314,-122.52457809605406],[38.06733848898721,-122.52251815953062],[38.06909537509455,-122.52062988438414],[38.069500804358164,-122.51788330235289],[38.06882508767047,-122.51582336582945],[38.06652760424542,-122.51633834996028],[38.067068195071926,-122.51256179966734],[38.06666275232655,-122.5105018631439],[38.06504095887579,-122.50947189488218],[38.06166210705491,-122.50912857212828],[38.06098631796698,-122.51221847691343],[38.05868858838422,-122.51239013829039],[38.05706661818215,-122.5134201065521],[38.05706661818215,-122.51153183140562],[38.05382256993469,-122.50844192662046],[38.0546335954768,-122.50672531285093],[38.05409291278059,-122.50518036045833],[38.05220049189031,-122.50569534458921],[38.04733404208064,-122.50174713291929],[38.04435994127349,-122.5034637466888],[38.0442247520026,-122.50724029698176],[38.047874774701945,-122.50741195835874],[38.050983909767155,-122.50809860386656],[38.05206531709735,-122.51359176792903],[38.04841550332931,-122.5134201065521],[38.04625256485645,-122.51565170445247],[38.04368399242301,-122.51565170445247],[38.040844939107984,-122.51410675205992],[38.03827617697357,-122.51462173619075]
+                ],     
+                color: '#3f0248',
+                info: {
+                    title: 'San Jose',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Santa Margarita, Las Gallinas, and San Pedro': {
+                coordinates: [
+                    [38.03819505793949,-122.51427841343684],[38.03819505793949,-122.51616668858335],[38.03684304017937,-122.51753997959898],[38.03887105745966,-122.52268982090757],[38.03887105745966,-122.52921295323176],[38.044143639557994,-122.54414749302671],[38.04373806979839,-122.56629181065364],[38.046306640334734,-122.57847976841731],[38.06752769537102,-122.61435699620051],[38.07158197377591,-122.62637329258726],[38.0719873892579,-122.6397628799896],[38.064824718270096,-122.65521240391536],[38.0610403825611,-122.67512512364192],[38.04617145465831,-122.68233490147398],[38.03170514506296,-122.65967559971617],[38.01683025922435,-122.6133270279388],[38.01967024337502,-122.60766220249937],[38.021157810198616,-122.60749054112242],[38.027783877371114,-122.59272766270442],[38.00682181887141,-122.5628585831146],[37.991536023587166,-122.55204391636656],[37.97705892686872,-122.55479049839781],[37.96934566259395,-122.52835464634703],[37.967857044614,-122.5261230484466],[37.96934566259395,-122.52097320713804],[37.96961631716569,-122.51548004307554],[37.96893967886551,-122.51067352452085],[37.96893967886551,-122.50655365147395],[37.96745105265383,-122.50483703770442],[37.967857044614,-122.50294876255796],[37.9700222971524,-122.50174713291929],[37.9700222971524,-122.49865722813414],[37.9711048994745,-122.49591064610289],[37.97354069632716,-122.49367904820247],[37.97340537640018,-122.48458099522395],[37.97299941512244,-122.48200607456968],[37.972593451599586,-122.47754287876887],[37.973811335432806,-122.47531128086851],[37.972052163410105,-122.473423005722],[37.972864094197604,-122.47084808506773],[37.97529983267742,-122.47084808506773],[37.975164515993384,-122.47256469883726],[37.97760017813809,-122.47565460362242],[37.98003575945574,-122.47359466709898],[37.97908859854788,-122.47084808506773],[37.980306374612724,-122.46878814854429],[37.982471259944546,-122.46878814854429],[37.984500781939786,-122.46964645542906],[37.9907242993653,-122.46964645542906],[37.99437698763101,-122.4653549210052],[37.994106424367345,-122.46209335484312],[37.99194188232988,-122.46123504795833],[37.991536023587166,-122.45900345005796],[37.99221245357758,-122.45711517491148],[37.99221245357758,-122.45488357701106],[37.99004785565263,-122.45488357701106],[37.98896553273872,-122.45780182041929],[37.985177276797536,-122.46329498448176],[37.984500781939786,-122.46192169346614],[37.985447872994236,-122.45522689976497],[37.984094882031386,-122.4526519791107],[37.982741866120485,-122.45368194737242],[37.98111821409639,-122.45660019078062],[37.97949452614805,-122.45763015904234],[37.97814142541601,-122.45471191563414],[37.97814142541601,-122.45093536534117],[37.98111821409639,-122.44939041294859],[37.980982908139474,-122.44630050816343],[37.982471259944546,-122.44389724888609],[37.982471259944546,-122.44218063511656],[37.983688979877634,-122.44252395787046],[37.983688979877634,-122.44475555577083],[37.98612435912006,-122.44406891026301],[37.989236114964136,-122.44853210606382],[37.992618308577846,-122.44904709019468],[37.993971142361254,-122.45196533360289],[37.99505339142387,-122.45471191563414],[37.998705864118534,-122.45574188389585],[38.00032912693065,-122.45745849766539],[37.99911168318999,-122.45986175694273],[38.00046439720981,-122.46123504795833],[37.999382227990075,-122.46329498448176],[38.00032912693065,-122.46552658238218],[38.00357554476359,-122.46878814854429],[38.00289921956724,-122.47204971470637],[38.00262868774206,-122.47359466709898],[38.00357554476359,-122.47634124913023],[38.00249342145521,-122.47857284703062],[38.00384607309545,-122.47994613804624],[38.00519869978337,-122.47994613804624],[38.00465765210251,-122.48389434971614],[38.00668656031982,-122.48406601109312],[38.00736285058248,-122.48715591587828],[38.00587500377013,-122.48801422276301],[38.00573974347183,-122.49196243443296],[38.00844490202712,-122.49282074131773],[38.008985921760654,-122.49556732334898],[38.01074420832098,-122.495395661972],[38.0122319563176,-122.4965972916107],[38.01196145892773,-122.49985885777281],[38.01101471020259,-122.50174713291929],[38.00966219081304,-122.50174713291929],[38.008580157334826,-122.50260543980406],[38.00830964646991,-122.50655365147395],[38.0077686217457,-122.51084518589781],[38.00682181887141,-122.51410675205992],[38.00668656031982,-122.51753997959898],[38.00452238955848,-122.51874160923762],[38.0023581549188,-122.52165985264585],[37.999382227990075,-122.52629470982359],[37.998029494009195,-122.52835464634703],[37.996676735077216,-122.52835464634703],[38.00073493701961,-122.53522110142512],[38.00181708627803,-122.53453445591731],[38.0014112821775,-122.53213119664],[38.00344028022337,-122.52749633946223],[38.00655130151868,-122.52629470982359],[38.00993269668726,-122.52749633946223],[38.010608957005864,-122.52972793736265],[38.01101471020259,-122.53281784214781],[38.00871541239297,-122.53470611729429],[38.00668656031982,-122.53848266758726],[38.00952693750163,-122.53590774693293],[38.01385491969535,-122.5353927628021],[38.015883573384606,-122.53316116490171],[38.01520736172688,-122.52852630772395],[38.01669501913876,-122.52492141880796],[38.014801631737676,-122.521144868515],[38.01642453821892,-122.52028656163023],[38.01696549906039,-122.51582336582945],[38.018723594219665,-122.51393509068293],[38.02088734574944,-122.51204681553648],[38.02278057593042,-122.51221847691343],[38.02223965801282,-122.51651001133726],[38.03048822237942,-122.51805496372981],[38.034950173383336,-122.51462173619075],[38.03819505793949,-122.51427841343684]
+                ],     
+                color: '#dc5606',
+                info: {
+                    title: 'Santa Margarita, Las Gallinas, and San Pedro',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Corte Madera del Presidio': {
+                coordinates: [
+                    [37.93444993515032,-122.5269813553314],[37.9294402666272,-122.53213119664],[37.929575667562354,-122.53573608555601],[37.93052346712617,-122.53831100621028],[37.93052346712617,-122.54449081578062],[37.928898660393045,-122.54723739781187],[37.928898660393045,-122.55530548252867],[37.925242713956386,-122.5561637894134],[37.92239907438758,-122.55204391636656],[37.92063867097751,-122.55204391636656],[37.91914906594819,-122.5518722549896],[37.91765943074892,-122.54929733433531],[37.91495092582022,-122.5486106888275],[37.91495092582022,-122.54655075230406],[37.91332577499166,-122.54500579991148],[37.91332577499166,-122.54723739781187],[37.91102341652588,-122.54449081578062],[37.908043786847124,-122.54260254063414],[37.904386803684105,-122.54260254063414],[37.903167768908574,-122.53813934483335],[37.90072963877702,-122.53522110142512],[37.900052366072465,-122.53316116490171],[37.89761413273189,-122.53144455113218],[37.895270643431104,-122.52600288469695],[37.89705197301875,-122.5260286335106],[37.897187433580115,-122.52474117318343],[37.89810178584876,-122.52383995095445],[37.89864361887041,-122.52396869698714],[37.89894839819224,-122.52332496682357],[37.89867748330182,-122.52263832131575],[37.89755994883844,-122.52280998269273],[37.895765085252584,-122.52233791390609],[37.89478297155777,-122.52216625252916],[37.89424111011725,-122.52246665993883],[37.894207243644765,-122.52298164406966],[37.893529910923625,-122.52328205147933],[37.893055774310746,-122.52315330544664],[37.891768816682735,-122.52212333718492],[37.89014315383785,-122.52092170754622],[37.889635126837405,-122.51993465462877],[37.88899162093797,-122.51980590859603],[37.888720669402986,-122.51933383980943],[37.88834810941435,-122.51890468636705],[37.88834810941435,-122.51821804085924],[37.88743363599543,-122.51791763344957],[37.886383671027176,-122.51705932656478],[37.88563852551545,-122.51577186623766],[37.88597722895554,-122.51512813607408],[37.88692559029967,-122.51465606728743],[37.88750137515668,-122.51371192971422],[37.88834810941435,-122.51311111489488],[37.88851745509743,-122.51251030007552],[37.888077155511276,-122.51117992440413],[37.88777233117852,-122.50989246407701],[37.887332027136694,-122.50924873391344],[37.88655302122826,-122.50911998788072],[37.88607883968376,-122.50963497201158],[37.88577400707843,-122.5103216175194],[37.88560465508578,-122.51105117837145],[37.88513046743428,-122.5115661625023],[37.88435143823513,-122.51195240060045],[37.883640143508025,-122.51143741646956],[37.88292884191072,-122.51040744820784],[37.882861098543124,-122.5095491413231],[37.883335300807595,-122.50839042702864],[37.88377562874765,-122.50757503548812],[37.883640143508025,-122.5068454746361],[37.88350465801918,-122.50581550637438],[37.8832675578139,-122.50474262276842],[37.88218366144005,-122.50354099312975],[37.88157396271937,-122.50366973916246],[37.88126911146627,-122.50397014657213],[37.88079489589774,-122.50422763863756],[37.8804900414199,-122.50362682381822],[37.88042229580901,-122.50319767037584],[37.88045616862225,-122.50251102486803],[37.88008356681991,-122.50130939522933],[37.879304484232996,-122.5005798343773],[37.87855926709083,-122.50027942696761],[37.877847916421665,-122.4987773899193],[37.87747530142465,-122.49817657509993],[37.87750917559316,-122.49787616769026],[37.87720430751562,-122.49723243752669],[37.877915664400426,-122.49607372323226],[37.87954159719703,-122.49633121529772],[37.88204817327168,-122.49744701424788],[37.88357240079476,-122.49804782906725],[37.8866885011087,-122.49903488198473],[37.88834810941435,-122.49954986611556],[37.88993994345834,-122.5002365116234],[37.89136240433674,-122.5005798343773],[37.891768816682735,-122.50096607247542],[37.89197202201439,-122.50173854867171],[37.891701081447536,-122.50276851693343],[37.89100001810928,-122.50378990192988],[37.89199911602272,-122.5037040712414],[37.89284579855587,-122.50329637547111],[37.89325220271303,-122.50357532520869],[37.893743271409605,-122.50434780140495],[37.89401420446069,-122.50445508976557],[37.89447140172327,-122.50428342838862],[37.895436586619525,-122.50355386753657],[37.89548738547404,-122.50318908711054],[37.895233390850926,-122.50243806858637],[37.89548738547404,-122.50222349186515],[37.89624936408492,-122.50239515324213],[37.89621549853638,-122.50209474583247],[37.89594457358709,-122.50085020084953],[37.89503019452145,-122.50042104740717],[37.89430206973488,-122.50016355534171],[37.89430206973488,-122.49964857121088],[37.893844871420605,-122.49926233311274],[37.89359087113019,-122.49874734898185],[37.89360780451016,-122.49825382252314],[37.89376020475451,-122.49748134632685],[37.894031137743276,-122.4964084627209],[37.89401420446069,-122.49587202091791],[37.89414967061227,-122.49548578281977],[37.89391260468337,-122.49499225636103],[37.893743271409605,-122.49494934101676],[37.893692471351514,-122.49368333836176],[37.893743271409605,-122.49295377750971],[37.893878738059776,-122.49233150501826],[37.89396340458956,-122.49215984364128],[37.894505268074205,-122.49224567432978],[37.89508099365639,-122.49222421665766],[37.89496246228697,-122.49196672459223],[37.894911663070225,-122.49138736744501],[37.895047127570336,-122.4908080102978],[37.89516565880343,-122.49027156849482],[37.89538578772994,-122.48975658436396],[37.89536885475897,-122.4888982774792],[37.8951317927563,-122.48844766636469],[37.894911663070225,-122.4881258012829],[37.89484393072671,-122.4881258012829],[37.89430206973488,-122.48728895207023],[37.89399727117421,-122.48696708698847],[37.89376020475451,-122.48720312138178],[37.89335380340179,-122.48683834095576],[37.892209094257076,-122.48557233830073],[37.892022823324275,-122.48514318485832],[37.891531743151496,-122.4848642351208],[37.891277734880205,-122.48426342030146],[37.89031249545693,-122.48334074040034],[37.8906003752057,-122.48282575626948],[37.890888253828834,-122.48250389118769],[37.890634243337445,-122.4821820261059],[37.89002461458255,-122.48211765308955],[37.8899060750718,-122.4817314149914],[37.889635126901986,-122.48134517689323],[37.88956738970375,-122.4806370737133],[37.88860212785751,-122.47838401814082],[37.88761991860354,-122.47679615040397],[37.886654631226556,-122.47550869007685],[37.88507966149799,-122.47355604191401],[37.88489337252808,-122.47357749958613],[37.88418208303548,-122.47282648106196],[37.88352159378352,-122.47226858158683],[37.88235302136463,-122.47168922443964],[37.88091345014073,-122.47117424030876],[37.879931138331166,-122.47224712391471],[37.879439977513385,-122.47267627735712],[37.87910124400658,-122.4732127191601],[37.878677824932396,-122.47372770329096],[37.87800034935087,-122.47409248371699],[37.87727205615097,-122.47432851811027],[37.875900135448966,-122.47417831440546],[37.874816130651304,-122.47370624561884],[37.87402005446952,-122.47325563450431],[37.8734611022226,-122.47280502338984],[37.87293602200625,-122.47246170063593],[37.87224155532692,-122.47179651280024],[37.871174435232696,-122.47115278263666],[37.870310564788156,-122.47042322178461],[37.869599134463705,-122.46988677998164],[37.869023209645896,-122.4693932535229],[37.868498097800426,-122.4689426424084],[37.86856585437786,-122.46832036991694],[37.86836258445862,-122.46769809742545],[37.867989921483556,-122.46735477467155],[37.867701953348295,-122.466711044508],[37.867363165865946,-122.46628189106559],[37.86692273981023,-122.46585273762324],[37.86649925073571,-122.46525192280387],[37.86614351803226,-122.46482276936152],[37.86581488722099,-122.46444296846678],[37.86566242914248,-122.46418547640134],[37.86544221136109,-122.464121103385],[37.86527281261991,-122.46375632295897],[37.86496789390447,-122.46331644068052],[37.86483237407041,-122.4631876946478],[37.864764614059915,-122.46264052400878],[37.86432417247307,-122.46213626871396],[37.8641039506925,-122.46193242082884],[37.86383290759761,-122.46113848696042],[37.86370585580374,-122.46110630045224],[37.86352798292433,-122.46070933351804],[37.86344328140228,-122.46070933351804],[37.86340093060475,-122.46054840097716],[37.863256937711114,-122.46052694330503],[37.86318917625204,-122.46025872240355],[37.862892719136106,-122.46008706102658],[37.86266402283184,-122.45929312715818],[37.862494617704456,-122.45921802530577],[37.8622320389875,-122.4587566853552],[37.86229133103761,-122.45857429514218],[37.86224897957811,-122.45848846445372],[37.86214733597601,-122.45844554910948],[37.86205416255094,-122.45820951471616],[37.86210498443374,-122.45795202265073],[37.862579320316826,-122.45788764963437],[37.86281648711353,-122.45820951471616],[37.86342634108619,-122.45858502397824],[37.863714325930154,-122.45862793932248],[37.864120890852824,-122.4582524300604],[37.864934013969304,-122.45827388773252],[37.86517117318827,-122.45820951471616],[37.865493030907516,-122.4585206509619],[37.86580641733602,-122.45874595651914],[37.86616215166681,-122.45925021181394],[37.86650094467099,-122.46031236658384],[37.86758507181703,-122.46090245256713],[37.86785610111129,-122.46090245256713],[37.86819319243088,-122.46145391483878],[37.86829482769425,-122.46177577992057],[37.86856585437786,-122.46226930637934],[37.86937892844729,-122.46252679844477],[37.8695212154482,-122.46262764935636],[37.86961014470847,-122.46256327634],[37.86971601273551,-122.4626115561023],[37.86985152358816,-122.46276712422517],[37.870296166822826,-122.46276175980711],[37.870363074823565,-122.46256542215635],[37.87067644054002,-122.46255469332029],[37.87097286634242,-122.4627156258612],[37.871455614382214,-122.46298384676268],[37.8719298900778,-122.46323060999204],[37.87214161931331,-122.46316623697568],[37.87234487880692,-122.46339154253295],[37.8725142612899,-122.46331644068052],[37.872412631846835,-122.46316623697568],[37.87265823609422,-122.46293020258237],[37.8727768033689,-122.46291947374631],[37.872878432309555,-122.46265125284484],[37.87308168977036,-122.46240448961545],[37.873107096913515,-122.46218991289426],[37.87308168977036,-122.46216845522214],[37.873217194432684,-122.46239376077939],[37.87332729178728,-122.46220064173032],[37.87347973400666,-122.46200752268126],[37.873589830968896,-122.46177148828794],[37.87382696232875,-122.46132087717345],[37.87397940351417,-122.46098828325559],[37.87403868611221,-122.46074152002622],[37.87413184438415,-122.4603230954199],[37.87414031331211,-122.46004414568235],[37.873784617499055,-122.45961499223996],[37.87347126500272,-122.4596579075842],[37.87308168977036,-122.4596042634039],[37.87270905066388,-122.45938968668271],[37.872471915705646,-122.45911073694516],[37.87235334794032,-122.45886397371581],[37.87220090339021,-122.45861721048642],[37.87210774267651,-122.45832753191281],[37.87194682843902,-122.45828461656858],[37.87170969102741,-122.45814514169982],[37.87161652969257,-122.45782327661803],[37.871481022086165,-122.45752286920835],[37.87133704498127,-122.45738339433957],[37.87137939121781,-122.45712590227416],[37.871455614382214,-122.45695424089719],[37.87171816023381,-122.45687913904477],[37.87191295171269,-122.4570293427496],[37.87226865656253,-122.45710444460204],[37.872412631846835,-122.45704007158568],[37.87264976699588,-122.45696496973325],[37.87275986519848,-122.45699715624143],[37.87298683638429,-122.45649719257929],[37.8727497023202,-122.45641136189082],[37.87281745498782,-122.45589637775996],[37.872919083872446,-122.45516681690788],[37.87281745498782,-122.45448017140006],[37.87271582596301,-122.45342874546623],[37.87268194959027,-122.45263481159785],[37.87239399979292,-122.4524631502209],[37.872207678736075,-122.45173358936884],[37.87198748051594,-122.45111131687739],[37.872072172216946,-122.450682163435],[37.8722584936165,-122.45021009464838],[37.87249562926168,-122.44965219517329],[37.872919083872446,-122.44930887241938],[37.873291721916544,-122.44911575337031],[37.87344416420954,-122.44890117664909],[37.873765985792126,-122.44896554966547],[37.87413861955245,-122.44913721104243],[37.87454512695949,-122.44909429569819],[37.87471450438371,-122.44872951527216],[37.87479919294978,-122.4482145311413],[37.8748500060427,-122.44799995442011],[37.87508713334618,-122.44778537769889],[37.87517182148387,-122.44718456287958],[37.87532425988635,-122.44632625599482],[37.87542588531278,-122.44566106815913],[37.87545976042375,-122.44531774540522],[37.875798510676816,-122.44486713429072],[37.876018697505934,-122.44437360783198],[37.87600176008092,-122.44321489353754],[37.87634050784155,-122.44353675861933],[37.8764184195803,-122.44372558603574],[37.877062035353035,-122.4437363148718],[37.87721446984396,-122.44385433206847],[37.87745158953617,-122.44386506090453],[37.87782420465313,-122.44411182413388],[37.87812907016501,-122.44426202783872],[37.87829843934856,-122.4442942143469],[37.87856942923224,-122.44440150270749],[37.87887429165967,-122.44428348551084],[37.87909446929473,-122.44402599344541],[37.87943404965165,-122.44372880463746],[37.879709269501,-122.44362151627683],[37.879899805717365,-122.44348204140809],[37.880081873196886,-122.44325137143281],[37.8802597061145,-122.44304215912965],[37.88030204722209,-122.44292950635102],[37.88072122287374,-122.44206583504823],[37.8810675702615,-122.44111847887326],[37.88099982518185,-122.44062495241452],[37.880669567026146,-122.44050693521787],[37.88005985577107,-122.43947696695615],[37.88002598277558,-122.4391443730383],[37.88017841113265,-122.43879032144834],[37.88056794883413,-122.43852210054685],[37.88112684715507,-122.43840408335019],[37.88166880511288,-122.43812513361264],[37.882007526811286,-122.43807148943235],[37.882227695079855,-122.43793201456359],[37.882447862690256,-122.43831825266172],[37.882778112871705,-122.43850064287473],[37.883049086273466,-122.43884396562864],[37.88289666385765,-122.43923020372678],[37.883023682559404,-122.43953061113645],[37.883226912026515,-122.43972373018552],[37.88333699442039,-122.4400241375952],[37.88366724061467,-122.44017434130002],[37.88395514634495,-122.44032454500487],[37.88398054973771,-122.44056057939817],[37.884285389767165,-122.44063568125058],[37.884505551225885,-122.44098973284056],[37.88470030889071,-122.44109702120114],[37.8848611952688,-122.44133305559446],[37.88474264744535,-122.44168710718444],[37.884793453678775,-122.44207334528258],[37.88496280753702,-122.44238448152831],[37.8851829669705,-122.4426741601019],[37.88538619047872,-122.44269561777402],[37.885724895079434,-122.4432857037573],[37.885961987372966,-122.44336080560971],[37.88608053323348,-122.4433393479376],[37.88619061136165,-122.44343590746215],[37.88624988413172,-122.44359684000302],[37.88624988413172,-122.44411182413388],[37.886613987244075,-122.44449806223204],[37.88728122271935,-122.44458818455317],[37.887535244778526,-122.44437360783198],[37.88787393949427,-122.44450235386469],[37.88807715557588,-122.44460964222529],[37.88826343649134,-122.44450235386469],[37.88855132425191,-122.44525337238886],[37.889518280170215,-122.4456996918707],[37.88955214879972,-122.44584989557553],[37.8897045574397,-122.44577479372312],[37.89005170927523,-122.44610738764096],[37.89048353000579,-122.44632196436217],[37.891567304213694,-122.44716954241086],[37.89193984791302,-122.44711589823056],[37.892083784746525,-122.44722318659116],[37.89228698920883,-122.44708371172239],[37.892947399837794,-122.44762015352538],[37.892972800128305,-122.44781327257444],[37.89393800467313,-122.44886469850827],[37.89396001794962,-122.44915223126557],[37.893976951244674,-122.44924879079011],[37.89427751658361,-122.44959211354401],[37.89417591716971,-122.44972622399476],[37.89422671689418,-122.45019829278135],[37.89412935072483,-122.45021438603547],[37.893938851325316,-122.45085275178099],[37.89382031811684,-122.45128190522337],[37.89367215133787,-122.45157158379698],[37.893667917996936,-122.45192027096894],[37.89372295140995,-122.45224750046873],[37.89383725144403,-122.45263373856687],[37.893854184767335,-122.45274639134553],[37.89399388453582,-122.45283758645203],[37.89413358403922,-122.4530467987552],[37.89436218265473,-122.45345449452543],[37.894294449805614,-122.4536046982303],[37.89436641595574,-122.45359396939423],[37.89435794935347,-122.45498335366395],[37.89387958474496,-122.45496189599183],[37.89380338478578,-122.45518720154908],[37.89396425127373,-122.45624935631898],[37.894061617661464,-122.45760118966248],[37.89457808069535,-122.45899593835023],[37.89546198608345,-122.46051621446897],[37.895944573619374,-122.46110630045224],[37.896350960669395,-122.46113848696042],[37.89644409071901,-122.46134233484555],[37.896647283145604,-122.46143889437009],[37.89716372803862,-122.46182513246823],[37.897400783497496,-122.46221137056638],[37.89767170308707,-122.46331644068052],[37.89765477064193,-122.46436786661437],[37.89777329767608,-122.46501159677793],[37.89822200543351,-122.4654729367285],[37.89830666696776,-122.4660522938757],[37.89817120846618,-122.4664814473181],[37.899060150332765,-122.46755433092406],[37.899364927929795,-122.4677796364813],[37.89950885024526,-122.46784400949765],[37.90099377354585,-122.46895122567366],[37.90136965580684,-122.46889972706416],[37.90189453330161,-122.4691786768017],[37.90175908140326,-122.47007989903071],[37.901572834635985,-122.4707450868664],[37.90208077925479,-122.47149610539057],[37.90248713242565,-122.47196817417719],[37.902910414592775,-122.47201108952143],[37.90319824507574,-122.47224712391471],[37.90340141885653,-122.47364187260246],[37.90401093683329,-122.47409248371699],[37.904451141121264,-122.47585201283076],[37.90475589639342,-122.47600221653559],[37.90475589639342,-122.47628116627314],[37.905517779052076,-122.47681760807609],[37.90611034899961,-122.47679615040397],[37.90643202782993,-122.47673177738764],[37.90682142663773,-122.47688198109248],[37.907058450990036,-122.47673177738764],[37.90709231154949,-122.47610950489616],[37.907413986086944,-122.47636699696162],[37.90797268062548,-122.47658157368281],[37.90817584122406,-122.47673177738764],[37.90824356129893,-122.47664594669916],[37.90805733094306,-122.47267627735712],[37.908666810354724,-122.47274065037348],[37.90931014425655,-122.47280502338984],[37.9109015250034,-122.47349166889765],[37.91210350253614,-122.47400665302848],[37.912797593293675,-122.47409248371699],[37.91367789410297,-122.4738779069958],[37.914490470115624,-122.47426414509394],[37.914862897788396,-122.47441434879877],[37.915167609936354,-122.47454309483149],[37.915540034180815,-122.47456455250361],[37.91628487701306,-122.47460746784785],[37.916741935926,-122.4750366212902],[37.91711435219963,-122.47514390965082],[37.91694507230901,-122.4754443170605],[37.91679272007434,-122.47630262394526],[37.91633566147697,-122.47806215305903],[37.91606481059763,-122.47885608692741],[37.91606481059763,-122.47922086735343],[37.91606481059763,-122.47922086735343],[37.91645585120939,-122.47953844080259],[37.9166335962665,-122.47973155985167],[37.91674362870567,-122.47988176355649],[37.917116044970754,-122.48004269609739],[37.917243004630144,-122.48040747652341],[37.917463067520636,-122.48058986673642],[37.91761541836682,-122.48099756250669],[37.91781855233752,-122.48125505457212],[37.91797936633314,-122.4815769196539],[37.91805554126095,-122.48183441171935],[37.91805554126095,-122.48194170007993],[37.918157107708666,-122.48187732706359],[37.91854644445899,-122.48237085352231],[37.918961170469586,-122.48310041437436],[37.9191135182127,-122.48335790643979],[37.919528241025716,-122.4839158059149],[37.919655196521404,-122.48439860353757],[37.91995988881684,-122.48483848581601],[37.9202391889788,-122.4851067067175],[37.920510024486546,-122.485557317832],[37.92071315046283,-122.48588991174985],[37.92071315046283,-122.48655509958554],[37.92071315046283,-122.48771381387998],[37.920662369021365,-122.48830389986325],[37.92071315046283,-122.48901200304319],[37.92072161403301,-122.48962354669858],[37.92078932255931,-122.4899883271246],[37.9208147132406,-122.49028873453429],[37.92090781233034,-122.49041748056699],[37.9209162758781,-122.4909753800421],[37.9209924477642,-122.49141526232053],[37.92119557240807,-122.49190878877927],[37.921102473682595,-122.49231648454955],[37.92064544225385,-122.4938421253319],[37.92017148033347,-122.49495792428209],[37.91895270708426,-122.49555873910143],[37.91763234660658,-122.4965457920189],[37.91671823700639,-122.49744701424788],[37.91505926834555,-122.49856281319808],[37.914923840680586,-122.50010776559068],[37.914923840680586,-122.50135231057357],[37.91411126945499,-122.50216770211412],[37.913400262269676,-122.50251102486803],[37.91248610007655,-122.50285434762193],[37.91248610007655,-122.50474262276842],[37.9144836990476,-122.50542926827623],[37.915330122927436,-122.50525760689925],[37.91807246939943,-122.50564384499742],[37.919257402289986,-122.50590133706282],[37.919968352861154,-122.50710296670152],[37.92135637940735,-122.50899124184798],[37.92186418745217,-122.50993537942125],[37.9228797930226,-122.5131540302391],[37.923455296619984,-122.51534271279525],[37.923455296619984,-122.51851844826888],[37.92348914963249,-122.51920509377669],[37.9242677646194,-122.5192909244652],[37.9244031750799,-122.52126503030013],[37.92541874558574,-122.52319622079088],[37.92643430206547,-122.52160835305403],[37.92768680240666,-122.51916217843245],[37.92795761048599,-122.51735973397444],[37.9303271386331,-122.51718807259752],[37.93120722963752,-122.51959133187486],[37.93232425304774,-122.52139377633287],[37.93444993515032,-122.5269813553314]
+                ],     
+                color: '#dcc106',
+                info: {
+                    title: 'Corte Madera del Presidio',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Punta de los Reyes Sobrante': {
+                coordinates: [
+                    [38.122727656079846,-122.88187408761588],[38.100847198390014,-122.91757965402213],[38.04003376492587,-122.85681152658073],[38.062743360738516,-122.82213592843621],[38.06166211117958,-122.81767273263542],[38.06301367063174,-122.80805969552604],[38.059742852213134,-122.80404281773374],[38.058661558317006,-122.80284118809504],[38.05582308582411,-122.80318451084895],[38.052849329896766,-122.79648971714781],[38.05041616699857,-122.79666137852476],[38.049199555220056,-122.7990646378021],[38.047847740641,-122.7987213150482],[38.04500884877446,-122.7987213150482],[38.04446809498585,-122.79631805577085],[38.04446809498585,-122.7935714737396],[38.04027711771141,-122.79048156895445],[38.03703232540618,-122.78498840489192],[38.03216486738676,-122.78704834141539],[38.027432306425425,-122.78533172764585],[38.009581040094425,-122.76593399205015],[38.0068759234605,-122.76473236241148],[38.00146539075907,-122.76044082798765],[37.99997742427553,-122.75597763218687],[37.99794833041536,-122.75838089146421],[37.99686612406823,-122.76112747349546],[37.99280770804807,-122.75838089146421],[37.992131283546634,-122.75185775913997],[37.98577258835171,-122.74447631993101],[37.98496080036033,-122.74104309239192],[37.97914272359641,-122.73623657383723],[37.97914272359641,-122.73417663731382],[37.97102370609304,-122.72971344151304],[37.96696386057724,-122.72490692295835],[37.95924953560962,-122.72044372715754],[37.954241557576715,-122.71460724034117],[37.95045150939386,-122.71409225621031],[37.94733810925184,-122.71100235142515],[37.92730090040993,-122.73812484898374],[37.92646138296637,-122.73946380693818],[37.927409222677014,-122.74092292864226],[37.92910176319841,-122.741952896904],[37.93032036824826,-122.74633026201629],[37.93072656544301,-122.74899101335906],[37.9322836338988,-122.75053596575164],[37.933366792504394,-122.75208091814422],[37.93478841395416,-122.75328254778289],[37.935600756724405,-122.75525665361785],[37.935600756724405,-122.75731659014129],[37.93648078459466,-122.76126480181121],[37.93621000791061,-122.76212310869599],[37.9370223349702,-122.76555633623504],[37.93925618809316,-122.76667213518525],[37.941760730553966,-122.76821708757781],[37.941963797823526,-122.76916122515107],[37.943656003248094,-122.77001953203582],[37.94412981378402,-122.77207946855926],[37.94406212675165,-122.77396774370574],[37.943994439656926,-122.7748260505905],[37.94297912575433,-122.77542686540986],[37.94311450175187,-122.77671432573699],[37.94453593466897,-122.77577018816376],[37.94528048379506,-122.77577018816376],[37.946904928429056,-122.77662849504851],[37.94805555498257,-122.77800178606414],[37.9483262880235,-122.7792892463913],[37.94785250454718,-122.78134918291474],[37.9477171372785,-122.78229332048797],[37.94852933714952,-122.78323745806121],[37.94961225634431,-122.78358078081511],[37.950965882891325,-122.78280830461883],[37.953199312166895,-122.78358078081511],[37.95692154339725,-122.78495407183074],[37.96172632661491,-122.78735733110808],[37.96713979021768,-122.79018974382781],[37.975191578937206,-122.79611206133269],[37.97742427150041,-122.7979145057907],[37.97985985865562,-122.8008327491989],[37.98080700960956,-122.80323600847625],[37.98222771312011,-122.8045234688034],[37.98324248450229,-122.8059825905075],[37.98513668686906,-122.80847168047332],[37.98554258101443,-122.80967331011199],[37.98500138832161,-122.81164741594695],[37.98561022982037,-122.81267738420867],[37.98743672400421,-122.81430816728972],[37.990074913108,-122.81619644243622],[37.991698366940845,-122.81739807207488],[37.99311885957278,-122.81859970171355],[37.993795274967496,-122.81894302446746],[37.99602740151451,-122.8210029609909],[37.99832709721297,-122.82392120439911],[37.9989358281219,-122.82589531023406],[37.998462371184935,-122.82690811196517],[37.998462371184935,-122.82806682625963],[37.998800555023244,-122.82789516488268],[37.99964600779638,-122.82750892678453],[38.00018709245616,-122.82853889504625],[38.002385207833235,-122.83130264360808],[38.00427891593763,-122.8349075325241],[38.005766795138676,-122.83808326799773],[38.007322272929855,-122.84057235796355],[38.00847195269586,-122.84160232622527],[38.00921585352567,-122.84306144792937],[38.00962161443307,-122.84409141619109],[38.01050075536135,-122.84615135271453],[38.01212375706868,-122.84803962786103],[38.01252950188087,-122.85052871782683],[38.01361147706677,-122.85061454851531],[38.014017213644024,-122.85224533159636],[38.016045862841416,-122.85550689775847],[38.01875064109537,-122.86228752214814],[38.021184856175935,-122.86838150102996],[38.02213147353745,-122.87284469683074],[38.023821831267455,-122.8788528450241],[38.02476841456337,-122.88348770220183],[38.02598543226059,-122.88795089800261],[38.02652632252606,-122.89224243242644],[38.027337650437104,-122.89653396685028],[38.027540481011,-122.89979553301238],[38.028419407008975,-122.90477371294402],[38.02868984365618,-122.91000938494109],[38.028622234587964,-122.91412925798797],[38.02868984365618,-122.91833496172332],[38.02943353928846,-122.92254066545867],[38.030853300894535,-122.92657470781707],[38.03132654864849,-122.93017959673308],[38.030853300894535,-122.9327545173874],[38.0303800500832,-122.93387031633759],[38.030853300894535,-122.93567276079558],[38.030853300894535,-122.93678855974578],[38.03125894201367,-122.93979263384247],[38.03146176173089,-122.94202423174285],[38.03146176173089,-122.94408416826629],[38.03132654864849,-122.94614410478972],[38.03132654864849,-122.9488048561325],[38.03112372855688,-122.9499206550827],[38.0303800500832,-122.9499206550827],[38.029703972192,-122.95198059160614],[38.029230713955656,-122.95515632707978],[38.027878530719626,-122.95953369219207],[38.02632348914444,-122.96262359697722],[38.02470080187634,-122.96554184038543],[38.02213147353745,-122.97034835894011],[38.02003537579713,-122.97266578752898],[38.017398264446015,-122.97584152300261],[38.014761058202495,-122.97764396746062],[38.011718010010654,-122.97970390398406],[38.00799855732857,-122.9821071632614],[38.00502285931223,-122.98348045427703],[38.00197940687665,-122.9835662849655],[37.99927400977698,-122.9832229622116],[37.9981918229915,-122.98330879290008],[37.99710962023727,-122.98013305742644],[37.995283366879654,-122.97704315264129],[37.99474224604102,-122.97549820024871],[37.99393055729793,-122.97223663408661],[37.99453932469732,-122.97129249651336],[37.99338942647917,-122.97069168169402],[37.99372763370871,-122.96888923723601],[37.994065839378855,-122.96717262346648],[37.99291593373803,-122.9667434700241],[37.99183365313853,-122.96519851763152],[37.99095428839385,-122.96511268694304],[37.990480779934416,-122.96382522661591],[37.990074913108,-122.96528434832001],[37.990074913108,-122.9667434700241],[37.990413135619264,-122.96777343828582],[37.990548424187175,-122.96983337480926],[37.990074913108,-122.97086334307099],[37.990277846801874,-122.97257995684052],[37.99115721965516,-122.9733524330368],[37.99223951023458,-122.97292327959443],[37.99271300734196,-122.97395324785614],[37.99244243794056,-122.97532653887176],[37.992577722766,-122.97704315264129],[37.99271300734196,-122.978073120903],[37.99278064953634,-122.97978973467254],[37.99278064953634,-122.98107719499968],[37.99223951023458,-122.98219299394988],[37.99271300734196,-122.9832229622116],[37.99291593373803,-122.9850254066696],[37.992510080384456,-122.98579788286591],[37.99176601007087,-122.98571205217742],[37.99223951023458,-122.9865703590622],[37.99325414315073,-122.98734283525847],[37.9935247095581,-122.98837280352019],[37.99453932469732,-122.99043274004363],[37.99393055729793,-122.9930934913864],[37.99271300734196,-122.99343681414031],[37.99244243794056,-122.99481010515593],[37.99338942647917,-122.99541091997527],[37.993998198369574,-122.99618339617156],[37.99393055729793,-122.99747085649871],[37.99359235100401,-122.99832916338347],[37.993051217690244,-122.99961662371062],[37.9938629161639,-123.000045777153],[37.993795274967496,-123.00090408403777],[37.99325414315073,-123.00090408403777],[37.99311885957278,-123.00219154436492],[37.99298357574532,-123.00347900469207],[37.993051217690244,-123.00588226396941],[37.994404043489645,-123.00613975603484],[37.99562156537661,-123.00725555498504],[37.99568920488884,-123.00845718462371],[37.995553925801964,-123.00983047563933],[37.995486286164976,-123.01137542803191],[37.995486286164976,-123.01257705767058],[37.994404043489645,-123.01334953386687],[37.99372763370871,-123.01377868730927],[37.9938629161639,-123.0151519783249],[37.99447168412466,-123.01609611589812],[37.9942011212103,-123.01686859209443],[37.9942011212103,-123.01798439104462],[37.99453932469732,-123.0191001899948],[37.995012806959345,-123.01952934343718],[37.99514808704425,-123.02090263445281],[37.99514808704425,-123.02227592546843],[37.994336402792236,-123.02330589373015],[37.99541864646558,-123.02399253923797],[37.996568512871946,-123.02425003130341],[37.99724489645483,-123.02382087786101],[37.99683906705362,-123.02270507891082],[37.99771836125141,-123.02227592546843],[37.99853000807735,-123.02158927996062],[37.99947691802148,-123.02090263445281],[37.99995036840875,-123.020215988945],[37.99954455397823,-123.01832771379853],[37.99886819160377,-123.01712608415984],[37.9991387373021,-123.01575279314422],[38.00008563938656,-123.01540947039031],[38.00116779822644,-123.0151519783249],[38.000897260013566,-123.01300621111297],[38.004819966413194,-123.01017379839324],[38.005969685417696,-123.00991630632782],[38.00718701530152,-123.00905799944304],[38.00867483548895,-123.00845718462371],[38.012664749652494,-123.00648307878875],[38.01699254658493,-123.0040798195114],[38.01983252444683,-123.00304985124968],[38.02145531952705,-123.00236320574187],[38.02280762130879,-123.00124740679168],[38.02490363975023,-123.00150489885712],[38.02855462545736,-122.99884414751433],[38.03010961967546,-122.99841499407196],[38.03247585189362,-122.99644088823699],[38.03538283255134,-122.99609756548308],[38.037275688165614,-122.99446678240203],[38.03876289754316,-122.99369430620574],[38.040993654981605,-122.99335098345183],[38.04322434446539,-122.9916343696823],[38.04538737239996,-122.99103355486298],[38.04748274477473,-122.9898319252243],[38.05038912975082,-122.98802948076629],[38.05248435896801,-122.98742866594695],[38.054511943043394,-122.98605537493133],[38.05755321384232,-122.98579788286591],[38.059580657497335,-122.98382377703093],[38.06620324865703,-122.9814376862487],[38.0721495544091,-122.97903442697135],[38.077284611299554,-122.97731781320182],[38.08809407886683,-122.97319794015496],[38.095659755295614,-122.96839142160027],[38.10430528370985,-122.96598816232292],[38.11186928194898,-122.96289825753776],[38.1221334553447,-122.95809173898307],[38.12996566967419,-122.95534515695182],[38.13941722305551,-122.95191192941277],[38.148057572086444,-122.95019531564324],[38.15480713274609,-122.94950867013543],[38.16560513057942,-122.95122528390496],[38.16857429963515,-122.9532852204284],[38.176671418717746,-122.9536285431823],[38.182068998322094,-122.96770477609246],[38.187196328586815,-122.96564483956901],[38.19502155795575,-122.96564483956901],[38.20230636053829,-122.96770477609246],[38.20419489408619,-122.97148132638543],[38.209050898250595,-122.9752578766784],[38.21336707443818,-122.98006439523307],[38.22091976683121,-122.9814376862487],[38.223886681499245,-122.98315430001823],[38.226314067139185,-122.9869308503112],[38.23062921938795,-122.99105072335809],[38.236022799686694,-122.99414062814324],[38.24060702841731,-122.99551391915887],[38.23818011979866,-122.98967743234246],[38.23656213571519,-122.98418426827995],[38.23332605954002,-122.98212433175651],[38.2273928792016,-122.97731781320182],[38.22496552956129,-122.97182464913934],[38.22011058728631,-122.96907806710809],[38.213906578463856,-122.96392822579948],[38.20797181420939,-122.9594650299987],[38.20635315815239,-122.95294189767449],[38.20419489408619,-122.94916534738152],[38.20176677052642,-122.94607544259637],[38.19718009396176,-122.94607544259637],[38.19421209045785,-122.94985199288934],[38.19394226595911,-122.94573211984245],[38.19286295796692,-122.94023895577995],[38.18962493801858,-122.93543243722526],[38.18530735415859,-122.9313125641784],[38.17829073458205,-122.92547607736199],[38.171273439283084,-122.92066955880729],[38.16614498849407,-122.91757965402213],[38.16371559639461,-122.91414642648307],[38.161556068786886,-122.91448974923698],[38.15966642965912,-122.90865326242059],[38.15480713274609,-122.9041900666198],[38.15291731872143,-122.9093399079284],[38.15089246363977,-122.90703964390562],[38.14792257450239,-122.90240478672789],[38.14670758500342,-122.90274810948179],[38.142117442049745,-122.89725494541929],[38.13590678897411,-122.89588165440367],[38.1334763895322,-122.89347839512632],[38.13077585078312,-122.88781356968687],[38.127535072391936,-122.88541031040953],[38.122727656079846,-122.88187408761588]
+                ],     
+                color: '#21dc06',
+                info: {
+                    title: 'Punta de los Reyes Sobrante',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
+                }
+            },
+            'Tomales y Baulines': {
+                coordinates: [
+                    [37.93315016226665,-122.56292724923698],[37.90687898991992,-122.61579895333854],[37.91175476193632,-122.62197876290885],[37.92015116740485,-122.62884521798699],[37.92502605978004,-122.63742828683463],[37.93098382271217,-122.64532471017448],[37.93369173718054,-122.64566803292838],[37.93369173718054,-122.65013122872918],[37.94100260799644,-122.65802765206901],[37.94695907617155,-122.66180420236198],[37.95074930452637,-122.67279053048699],[37.95426862720033,-122.6786270173034],[37.96347221243364,-122.68686676339713],[37.947771284422444,-122.71021271066276],[37.94993712919674,-122.71433258370965],[37.95345649077878,-122.71433258370965],[37.95751708309643,-122.7170791657409],[37.96266017777727,-122.72016907052605],[37.96888554732562,-122.72600555734245],[37.97186271139435,-122.72978210763542],[37.97889916469296,-122.73458862619012],[37.982146531009754,-122.74076843576043],[37.99026431811285,-122.74969482736198],[37.99215833920144,-122.75724792794793],[37.995134559253415,-122.76205444650262],[37.99756955856541,-122.7558746369323],[38.00189824662225,-122.75896454171746],[38.005144594988565,-122.76445770577995],[38.01136636095004,-122.76686096505729],[38.015964718157946,-122.77578735665885],[38.021374180832865,-122.78059387521355],[38.02786500896757,-122.78677368478385],[38.03300317343625,-122.78780365304557],[38.036518551996664,-122.78437042550652],[38.038952176776455,-122.7891769440612],[38.042196884017805,-122.79055023507682],[38.043819183723734,-122.79329681710807],[38.043819183723734,-122.79707336740104],[38.04706367530368,-122.79878998117059],[38.05138944041949,-122.79741669015495],[38.05355222712153,-122.79913330392449],[38.05490393635837,-122.80256653146355],[38.060580842549626,-122.80702972726432],[38.063283976432935,-122.80840301827995],[38.06490580882992,-122.80565643624871],[38.066797901189084,-122.7998199494323],[38.07463604823653,-122.80290985421746],[38.07841968068723,-122.79673004464713],[38.07598736801153,-122.79261017160026],[38.07355497443982,-122.78437042550652],[38.082473355373125,-122.77853393869012],[38.08166263841358,-122.77407074288932],[38.07950068257602,-122.7730407746276],[38.07760891878388,-122.76926422433463],[38.07544684309767,-122.76583099679557],[38.06977109031664,-122.76205444650262],[38.066797901189084,-122.76514435128776],[38.05868858941543,-122.76480102853385],[38.05598528577424,-122.7610244782409],[38.05598528577424,-122.7558746369323],[38.050308023104286,-122.75518799142449],[38.04490069689229,-122.74626159982292],[38.04165610946173,-122.73973846749871],[38.036518551996664,-122.74042511300652],[38.03300317343625,-122.73733520822137],[38.02543101580066,-122.73184204415885],[38.018128551142496,-122.7287521393737],[38.02002185259759,-122.72497558908073],[38.01677616301371,-122.7174224884948],[38.014612290101056,-122.7122726471862],[38.00893181976059,-122.7067794831237],[38.00379196730253,-122.70403290109245],[37.99811065854523,-122.7016296418151],[37.99459343731695,-122.69888305978387],[37.99242890965071,-122.69785309152215],[37.98837024812349,-122.69201660470574],[37.98539375362829,-122.68274689035026],[37.98539375362829,-122.67828369454949],[37.98322895451595,-122.67519378976434],[37.982958350136265,-122.67176056222527],[37.97944040239131,-122.66764068917838],[37.97862854434697,-122.66008758859245],[37.977275427648976,-122.65322113351434],[37.9767341739847,-122.64566803292838],[37.98322895451595,-122.64051819161979],[37.99161719530892,-122.63330841378777],[37.99324061501056,-122.62403869943229],[37.9705094699665,-122.61511230783074],[37.96184813414133,-122.61614227609245],[37.94750054933642,-122.60515594796745],[37.93315016226665,-122.56292724923698]
+                ],     
+                color: '#f8c3ff',
+                info: {
+                    title: 'Tomales y Baulines',
+                    description: 'Historic Mexican land grant with significant indigenous and Mexican-era history.',
+                    details: 'Granted to Camilo Ynitia in 1843, this rancho is unique as Ynitia was a Coast Miwok leader. The site includes important archaeological remains and was later famous as a hippie commune in the 1960s.',
+                    features: 'Now Olompali State Historic Park. Contains archaeological evidence of 6,000 years of human habitation, including Coast Miwok village sites.',
+                    stats: {
+                        'Grant Year': '1843',
+                        'Original Grantee': 'Camilo Ynitia (Coast Miwok)',
+                        'Approximate Acres': '8,900',
+                        'Current Status': 'State Historic Park'
+                    }
                 }
             }
         };
 
-        let map, currentLang = 'en', layers = [];
+        // --- FIX ALL REGIONS TOGETHER (CRITICAL) ---
 
-        function initMap() {
-            map = L.map('map').setView([38.15, -122.7], 11);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            
-            Object.keys(regionData).forEach(name => {
-                const data = regionData[name];
-                const poly = L.polygon(data.coordinates, {
-                    color: '#4F2009', fillColor: data.color, fillOpacity: 0.4, weight: 2
-                }).addTo(map);
-                
-                poly.on('click', () => {
-                    layers.forEach(l => l.setStyle({weight: 2, fillOpacity: 0.4}));
-                    poly.setStyle({weight: 4, fillOpacity: 0.7});
-                    showInfo(name);
+        function snapAndRoundCoordinates(polygons) {
+            const clusters = [];
+        
+            function findCluster(lat, lng) {
+                for (const c of clusters) {
+                    if (
+                        Math.abs(lat - c.lat) < SNAP_TOLERANCE &&
+                        Math.abs(lng - c.lng) < SNAP_TOLERANCE
+                    ) {
+                        return c;
+                    }
+                }
+                return null;
+            }
+        
+            // Build clusters
+            polygons.forEach(poly => {
+                poly.forEach(([lat, lng]) => {
+                    let cluster = findCluster(lat, lng);
+                    if (!cluster) {
+                        cluster = { lat, lng, count: 0 };
+                        clusters.push(cluster);
+                    }
+                    cluster.lat += lat;
+                    cluster.lng += lng;
+                    cluster.count++;
                 });
-                layers.push(poly);
             });
+        
+            // Average clusters
+            clusters.forEach(c => {
+                c.lat = roundCoord(c.lat / c.count);
+                c.lng = roundCoord(c.lng / c.count);
+            });
+        
+            // Rebuild polygons using canonical cluster coords
+            return polygons.map(poly =>
+                poly.map(([lat, lng]) => {
+                    const c = findCluster(lat, lng);
+                    return [c.lat, c.lng];
+                })
+            );
         }
 
-        function showInfo(name) {
-            const region = regionData[name].info;
-            document.getElementById('infoContent').innerHTML = `
-                <h2 class="info-title">${region.title[currentLang]}</h2>
-                <p style="margin-top:15px; line-height:1.6;">${region.description[currentLang]}</p>
+        // --- UTILITY FUNCTIONS ---
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function isPointInPolygon(lat, lng, coordinates) {
+            let inside = false;
+            const x = lat;
+            const y = lng;
+            for (let i = 0, j = coordinates.length - 1; i < coordinates.length; j = i++) {
+                const xi = coordinates[i][0]; const yi = coordinates[i][1];
+                const xj = coordinates[j][0]; const yj = coordinates[j][1];
+                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // --- MAP INITIALIZATION ---
+        function initMap() {
+            map = L.map('map').setView([38.0834, -122.7633], 9.5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // The image overlay has been commented out because the image file was not provided.
+            // If you have the image, you can uncomment the next line.
+            //L.imageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]).addTo(map);
+
+            Object.keys(regionData).forEach(regionName => {
+                
+                const region = regionData[regionName];
+                const polygon = L.polygon(region.coordinates, {
+                    color: region.color,
+                    weight: 3,
+                    opacity: 0.8,
+                    fillColor: region.color,
+                    fillOpacity: 0.2,
+                    smoothFactor: 1
+                }).addTo(map);
+
+                regions.push({ name: regionName, polygon: polygon, data: region });
+
+                polygon.on('click', () => {
+                    highlightRegion(regionName);
+                    showRegionInfo(regionName, region.info);
+                    map.fitBounds(polygon.getBounds(), { padding: [50, 50] });
+                });
+            });
+
+            document.getElementById('searchBtn').addEventListener('click', searchAddress);
+            document.getElementById('addressInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchAddress();
+            });
+            document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+
+            showWelcomeMessage(); // Show initial welcome message
+        }
+        
+        // --- UI AND DISPLAY FUNCTIONS ---
+        function showWelcomeMessage() {
+            const infoContent = document.getElementById('infoContent');
+            infoContent.innerHTML = `
+                <div class="info-title">Welcome to Address to Rancho</div>
+                <div class="info-text">Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.</div>
+            `;
+        }
+
+        function showRegionInfo(regionName, info, searchContext = null) {
+            const infoContent = document.getElementById('infoContent');
+            
+            const description = info.description?.[currentLang]?.replace(/\n/g, '<br><br>') || 'Description not available.';
+            const title = info.title?.[currentLang] || regionName;
+
+            let searchContextHTML = '';
+            if (searchContext) {
+                searchContextHTML = `
+                    <div class="coordinates-info">
+                        <strong>📍 Search Result:</strong><br>
+                        ${escapeHTML(searchContext.address)}<br>
+                        <small>Coordinates: ${searchContext.coordinates[0].toFixed(5)}, ${searchContext.coordinates[1].toFixed(5)}</small>
+                    </div>
+                `;
+            }
+
+            const statsForLang = info.stats?.[currentLang] || {};
+            const statsHTML = Object.entries(statsForLang).map(([label, value]) => `
+                <div class="stat-item">
+                    <span class="stat-label">${escapeHTML(label)}:</span>
+                    <span class="stat-value">${escapeHTML(value)}</span>
+                </div>
+            `).join('');
+
+            infoContent.innerHTML = `
+                <div class="info-title">${escapeHTML(title)}</div>
+                ${searchContextHTML}
                 <div class="region-stats">
-                    ${Object.entries(region.stats[currentLang]).map(([k,v]) => 
-                        `<div class="stat-item"><b>${k}:</b> <span>${v}</span></div>`).join('')}
-                </div>`;
+                    ${statsHTML}
+                </div>
+                <div class="info-text">${description}</div>
+            `;
         }
 
-        document.getElementById('langToggle').onclick = (e) => {
-            currentLang = currentLang === 'en' ? 'es' : 'en';
-            e.target.innerText = currentLang === 'en' ? 'ES' : 'EN';
-            document.getElementById('infoContent').innerHTML = 'Selection cleared.';
-        };
+        function showLoading() {
+            document.getElementById('infoContent').innerHTML = '<div class="loading">Searching...</div>';
+        }
 
-        window.onload = initMap;
+        function showError(message) {
+            document.getElementById('infoContent').innerHTML = `<div class="error"><strong>Error:</strong> ${escapeHTML(message)}</div>`;
+        }
+
+        function showNoRegionFound(address, lat, lng) {
+            document.getElementById('infoContent').innerHTML = `
+                <div class="info-title">Location Found</div>
+                <div class="coordinates-info">
+                    <strong>📍 Address:</strong><br>${escapeHTML(address)}<br>
+                    <small>Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>
+                </div>
+                <div class="info-text">This location is outside of the historic rancho boundaries shown on this map.</div>
+            `;
+        }
+        
+        // --- CORE LOGIC ---
+        function toggleLanguage() {
+            currentLang = (currentLang === 'en') ? 'es' : 'en';
+            document.getElementById('langToggle').innerText = (currentLang === 'en') ? 'ES' : 'EN';
+            
+            if (highlightedRegionName) {
+                const region = regionData[highlightedRegionName];
+                if (region) {
+                    showRegionInfo(highlightedRegionName, region.info);
+                }
+            }
+        }
+        
+        async function searchAddress() {
+            const address = document.getElementById('addressInput').value.trim();
+            if (!address) {
+                showError('Please enter an address.');
+                return;
+            }
+
+            showLoading();
+            clearHighlight();
+
+            try {
+                const query = encodeURIComponent(address + ', Marin County, California');
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&countrycodes=us`);
+                
+                if (!response.ok) throw new Error('Network response was not ok.');
+                
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const bestResult = data[0]; 
+                    const lat = parseFloat(bestResult.lat);
+                    const lng = parseFloat(bestResult.lon);
+
+                    if (currentMarker) map.removeLayer(currentMarker);
+                    currentMarker = L.marker([lat, lng]).addTo(map).bindPopup(bestResult.display_name).openPopup();
+                    map.setView([lat, lng], 14);
+
+                    const foundRegion = regions.find(r => isPointInPolygon(lat, lng, r.data.coordinates));
+                    
+                    if (foundRegion) {
+                        highlightRegion(foundRegion.name);
+                        showRegionInfo(foundRegion.name, foundRegion.data.info, {
+                            address: bestResult.display_name,
+                            coordinates: [lat, lng]
+                        });
+                    } else {
+                        showNoRegionFound(bestResult.display_name, lat, lng);
+                    }
+                } else {
+                    showError('Address not found. Please try again.');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                showError('Could not perform search. Please check your connection.');
+            }
+        }
+
+        function highlightRegion(regionName) {
+            clearHighlight();
+            const region = regions.find(r => r.name === regionName);
+            if (region) {
+                region.polygon.setStyle({ weight: 5, fillOpacity: 0.4 });
+                highlightedRegionPolygon = region.polygon;
+                highlightedRegionName = region.name;
+            }
+        }
+
+        function clearHighlight() {
+            if (highlightedRegionPolygon) {
+                highlightedRegionPolygon.setStyle({ weight: 3, fillOpacity: 0.2 });
+            }
+            highlightedRegionPolygon = null;
+            highlightedRegionName = null;
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
