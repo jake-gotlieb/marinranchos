@@ -29,6 +29,7 @@
             color: #D6C69F;
             padding: 30px;
             text-align: center;
+            position: relative;
         }
         
         .header h1 {
@@ -40,6 +41,29 @@
         .header p {
             font-size: 1.1em;
             opacity: 0.95;
+        }
+        
+        .lang-toggle-header {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+        
+        #langToggleMain {
+            padding: 10px 20px;
+            background: rgba(214, 198, 159, 0.2);
+            color: #D6C69F;
+            border: 2px solid #D6C69F;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        #langToggleMain:hover {
+            background: rgba(214, 198, 159, 0.4);
+            transform: translateY(-2px);
         }
         
         .search-container {
@@ -112,28 +136,6 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-        }
-        
-        .info-controls {
-            padding: 10px;
-            text-align: right;
-            border-bottom: 1px solid #D6C69F;
-            background: #F5F0E8;
-        }
-        
-        #langToggle {
-            padding: 8px 16px;
-            background: #4F2009;
-            color: #D6C69F;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        #langToggle:hover {
-            background: #6B2E11;
         }
         
         .info-content {
@@ -227,15 +229,18 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Marin County Historic Ranchos</h1>
-            <p>Discover the Mexican land grants of Marin County</p>
+            <div class="lang-toggle-header">
+                <button id="langToggleMain">ES / Español</button>
+            </div>
+            <h1 data-translate="site-title">Marin County Historic Ranchos</h1>
+            <p data-translate="site-subtitle">Discover the Mexican land grants of Marin County</p>
         </div>
         
         <div class="search-container">
             <div class="search-box">
                 <input type="text" id="addressInput" class="search-input" 
-                       placeholder="Enter an address (e.g., 1125 B St, San Rafael)">
-                <button id="searchBtn" class="search-btn">Search</button>
+                       data-translate-placeholder="search-placeholder">
+                <button id="searchBtn" class="search-btn" data-translate="search-button">Search</button>
             </div>
         </div>
         
@@ -245,9 +250,6 @@
             </div>
             
             <div class="info-panel">
-                <div class="info-controls">
-                    <button id="langToggle">ES</button>
-                </div>
                 <div class="info-content" id="infoContent"></div>
             </div>
         </div>
@@ -255,6 +257,48 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
+        // ===========================================
+        // TRANSLATIONS SYSTEM
+        // ===========================================
+        const translations = {
+            en: {
+                'site-title': 'Marin County Historic Ranchos',
+                'site-subtitle': 'Discover the Mexican land grants of Marin County',
+                'search-placeholder': 'Enter an address (e.g., 1125 B St, San Rafael)',
+                'search-button': 'Search',
+                'welcome-title': 'On Whose Rancho Do You Live?',
+                'welcome-text': 'Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.',
+                'loading': 'Searching',
+                'error-prefix': 'Error:',
+                'error-empty-address': 'Please enter an address.',
+                'error-not-found': 'Address not found. Please try again.',
+                'error-network': 'Could not perform search. Please check your connection.',
+                'search-result-label': '📍 Search Result:',
+                'coordinates-label': 'Coordinates:',
+                'location-found-title': 'Location Found',
+                'address-label': '📍 Address:',
+                'outside-boundary': 'This location is outside of the historic rancho boundaries shown on this map.'
+            },
+            es: {
+                'site-title': 'Ranchos Históricos del Condado de Marin',
+                'site-subtitle': 'Descubre las concesiones de tierras mexicanas del Condado de Marin',
+                'search-placeholder': 'Ingrese una dirección (ej., 1125 B St, San Rafael)',
+                'search-button': 'Buscar',
+                'welcome-title': '¿En Qué Rancho Vives?',
+                'welcome-text': 'Ingrese cualquier dirección en el Condado de Marin en el cuadro de búsqueda de arriba para descubrir a qué rancho histórico pertenece.',
+                'loading': 'Buscando',
+                'error-prefix': 'Error:',
+                'error-empty-address': 'Por favor ingrese una dirección.',
+                'error-not-found': 'Dirección no encontrada. Por favor intente de nuevo.',
+                'error-network': 'No se pudo realizar la búsqueda. Por favor verifique su conexión.',
+                'search-result-label': '📍 Resultado de búsqueda:',
+                'coordinates-label': 'Coordenadas:',
+                'location-found-title': 'Ubicación Encontrada',
+                'address-label': '📍 Dirección:',
+                'outside-boundary': 'Esta ubicación está fuera de los límites del rancho histórico que se muestran en este mapa.'
+            }
+        };
+
         // App state variables
         let map;
         let regions = [];
@@ -262,10 +306,43 @@
         let highlightedRegionPolygon = null;
         let highlightedRegionName = null;
         let currentLang = 'en';
-        // --- GEOMETRY CLEANUP UTILITIES ---
+        
+        // Translation function
+        function translatePage() {
+            // Update text content
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[currentLang][key]) {
+                    element.textContent = translations[currentLang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (translations[currentLang][key]) {
+                    element.placeholder = translations[currentLang][key];
+                }
+            });
+            
+            // Update button text
+            const langButton = document.getElementById('langToggleMain');
+            langButton.textContent = currentLang === 'en' ? 'ES / Español' : 'EN / English';
+            
+            // Update info panel if a region is selected
+            if (highlightedRegionName) {
+                const region = regionData[highlightedRegionName];
+                if (region) {
+                    showRegionInfo(highlightedRegionName, region.info);
+                }
+            } else {
+                showWelcomeMessage();
+            }
+        }
 
-        const SNAP_TOLERANCE = 0.000005; // ~0.5 meters
-        const ROUND_PRECISION = 6;       // ~11 cm
+        // --- GEOMETRY CLEANUP UTILITIES ---
+        const SNAP_TOLERANCE = 0.000005;
+        const ROUND_PRECISION = 6;
         
         function roundCoord(value) {
             const factor = Math.pow(10, ROUND_PRECISION);
@@ -273,44 +350,47 @@
         }
         
         function snapAndRoundCoordinates(polygons) {
-            const allPoints = [];
+            const clusters = [];
         
-            // Collect all points
+            function findCluster(lat, lng) {
+                for (const c of clusters) {
+                    if (
+                        Math.abs(lat - c.lat) < SNAP_TOLERANCE &&
+                        Math.abs(lng - c.lng) < SNAP_TOLERANCE
+                    ) {
+                        return c;
+                    }
+                }
+                return null;
+            }
+        
             polygons.forEach(poly => {
                 poly.forEach(([lat, lng]) => {
-                    allPoints.push([lat, lng]);
+                    let cluster = findCluster(lat, lng);
+                    if (!cluster) {
+                        cluster = { lat, lng, count: 0 };
+                        clusters.push(cluster);
+                    }
+                    cluster.lat += lat;
+                    cluster.lng += lng;
+                    cluster.count++;
                 });
             });
         
-            // Snap points
-            function findSnap(lat, lng) {
-                for (const [slat, slng] of allPoints) {
-                    if (
-                        Math.abs(lat - slat) < SNAP_TOLERANCE &&
-                        Math.abs(lng - slng) < SNAP_TOLERANCE
-                    ) {
-                        return [slat, slng];
-                    }
-                }
-                return [lat, lng];
-            }
+            clusters.forEach(c => {
+                c.lat = roundCoord(c.lat / c.count);
+                c.lng = roundCoord(c.lng / c.count);
+            });
         
-            // Apply snapping + rounding
             return polygons.map(poly =>
                 poly.map(([lat, lng]) => {
-                    const [sLat, sLng] = findSnap(lat, lng);
-                    return [
-                        roundCoord(sLat),
-                        roundCoord(sLng)
-                    ];
+                    const c = findCluster(lat, lng);
+                    return [c.lat, c.lng];
                 })
             );
         }
 
-        // --- DATA ---
-        // FIX: Standardized the data structure. All entries now have a consistent format
-        // with 'en' and 'es' keys for title, description, and stats. This prevents runtime errors.
-        // NOTE: For a real application, this data should be in a separate JSON file.
+        // --- REGION DATA (keeping your existing regionData object) ---
         const regionData = {
             'Corte Madera de Novato': {
                 coordinates: [[38.168250396984384,-122.69407654122918],[38.13396247671964,-122.72497558908073],[38.12045887373562,-122.7016296418151],[38.112355513009696,-122.7016296418151],[38.11208538550022,-122.69407654122918],[38.111274996977635,-122.68824005441276],[38.1066826255182,-122.6848068268737],[38.10560202557017,-122.67759704904168],[38.102630293298475,-122.67382049874871],[38.102630293298475,-122.65871429757682],[38.10587217705566,-122.65356445626824],[38.104791565119946,-122.63227844552605],[38.10803335297616,-122.63227844552605],[38.110464599463874,-122.62712860421745],[38.120999065813564,-122.62678528146354],[38.12153925389513,-122.63021850900262],[38.136122821387204,-122.63021850900262],[38.139093190885205,-122.63605499581902],[38.14557357737077,-122.63365173654168],[38.15016350287313,-122.64189148263542],[38.14692358543955,-122.65459442452996],[38.15124344337197,-122.66626739816276],[38.1496235266276,-122.67450714425652],[38.168250396984384,-122.69407654122918]],
@@ -1101,52 +1181,6 @@
             }
         };
 
-        // --- FIX ALL REGIONS TOGETHER (CRITICAL) ---
-
-        function snapAndRoundCoordinates(polygons) {
-            const clusters = [];
-        
-            function findCluster(lat, lng) {
-                for (const c of clusters) {
-                    if (
-                        Math.abs(lat - c.lat) < SNAP_TOLERANCE &&
-                        Math.abs(lng - c.lng) < SNAP_TOLERANCE
-                    ) {
-                        return c;
-                    }
-                }
-                return null;
-            }
-        
-            // Build clusters
-            polygons.forEach(poly => {
-                poly.forEach(([lat, lng]) => {
-                    let cluster = findCluster(lat, lng);
-                    if (!cluster) {
-                        cluster = { lat, lng, count: 0 };
-                        clusters.push(cluster);
-                    }
-                    cluster.lat += lat;
-                    cluster.lng += lng;
-                    cluster.count++;
-                });
-            });
-        
-            // Average clusters
-            clusters.forEach(c => {
-                c.lat = roundCoord(c.lat / c.count);
-                c.lng = roundCoord(c.lng / c.count);
-            });
-        
-            // Rebuild polygons using canonical cluster coords
-            return polygons.map(poly =>
-                poly.map(([lat, lng]) => {
-                    const c = findCluster(lat, lng);
-                    return [c.lat, c.lng];
-                })
-            );
-        }
-
         // --- UTILITY FUNCTIONS ---
         function escapeHTML(str) {
             if (!str) return '';
@@ -1179,12 +1213,7 @@
                 maxZoom: 19
             }).addTo(map);
 
-            // The image overlay has been commented out because the image file was not provided.
-            // If you have the image, you can uncomment the next line.
-            //L.imageOverlay('RanchoMap1860Stanford Transparent (1) (1).png', [[38.0, -123.0], [38.2, -122.6]]).addTo(map);
-
             Object.keys(regionData).forEach(regionName => {
-                
                 const region = regionData[regionName];
                 const polygon = L.polygon(region.coordinates, {
                     color: region.color,
@@ -1208,17 +1237,17 @@
             document.getElementById('addressInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') searchAddress();
             });
-            document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+            document.getElementById('langToggleMain').addEventListener('click', toggleLanguage);
 
-            showWelcomeMessage(); // Show initial welcome message
+            showWelcomeMessage();
         }
         
         // --- UI AND DISPLAY FUNCTIONS ---
         function showWelcomeMessage() {
             const infoContent = document.getElementById('infoContent');
             infoContent.innerHTML = `
-                <div class="info-title">On Whose Rancho Do You Live?</div>
-                <div class="info-text">Enter any address in Marin County into the search box above to discover which historic rancho it belongs to.</div>
+                <div class="info-title">${translations[currentLang]['welcome-title']}</div>
+                <div class="info-text">${translations[currentLang]['welcome-text']}</div>
             `;
         }
 
@@ -1232,9 +1261,9 @@
             if (searchContext) {
                 searchContextHTML = `
                     <div class="coordinates-info">
-                        <strong>📍 Search Result:</strong><br>
+                        <strong>${translations[currentLang]['search-result-label']}</strong><br>
                         ${escapeHTML(searchContext.address)}<br>
-                        <small>Coordinates: ${searchContext.coordinates[0].toFixed(5)}, ${searchContext.coordinates[1].toFixed(5)}</small>
+                        <small>${translations[currentLang]['coordinates-label']} ${searchContext.coordinates[0].toFixed(5)}, ${searchContext.coordinates[1].toFixed(5)}</small>
                     </div>
                 `;
             }
@@ -1258,41 +1287,35 @@
         }
 
         function showLoading() {
-            document.getElementById('infoContent').innerHTML = '<div class="loading">Searching...</div>';
+            document.getElementById('infoContent').innerHTML = `<div class="loading">${translations[currentLang]['loading']}</div>`;
         }
 
-        function showError(message) {
-            document.getElementById('infoContent').innerHTML = `<div class="error"><strong>Error:</strong> ${escapeHTML(message)}</div>`;
+        function showError(messageKey) {
+            const message = translations[currentLang][messageKey] || messageKey;
+            document.getElementById('infoContent').innerHTML = `<div class="error"><strong>${translations[currentLang]['error-prefix']}</strong> ${escapeHTML(message)}</div>`;
         }
 
         function showNoRegionFound(address, lat, lng) {
             document.getElementById('infoContent').innerHTML = `
-                <div class="info-title">Location Found</div>
+                <div class="info-title">${translations[currentLang]['location-found-title']}</div>
                 <div class="coordinates-info">
-                    <strong>📍 Address:</strong><br>${escapeHTML(address)}<br>
-                    <small>Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>
+                    <strong>${translations[currentLang]['address-label']}</strong><br>${escapeHTML(address)}<br>
+                    <small>${translations[currentLang]['coordinates-label']} ${lat.toFixed(5)}, ${lng.toFixed(5)}</small>
                 </div>
-                <div class="info-text">This location is outside of the historic rancho boundaries shown on this map.</div>
+                <div class="info-text">${translations[currentLang]['outside-boundary']}</div>
             `;
         }
         
         // --- CORE LOGIC ---
         function toggleLanguage() {
             currentLang = (currentLang === 'en') ? 'es' : 'en';
-            document.getElementById('langToggle').innerText = (currentLang === 'en') ? 'ES' : 'EN';
-            
-            if (highlightedRegionName) {
-                const region = regionData[highlightedRegionName];
-                if (region) {
-                    showRegionInfo(highlightedRegionName, region.info);
-                }
-            }
+            translatePage();
         }
         
         async function searchAddress() {
             const address = document.getElementById('addressInput').value.trim();
             if (!address) {
-                showError('Please enter an address.');
+                showError('error-empty-address');
                 return;
             }
 
@@ -1328,11 +1351,11 @@
                         showNoRegionFound(bestResult.display_name, lat, lng);
                     }
                 } else {
-                    showError('Address not found. Please try again.');
+                    showError('error-not-found');
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                showError('Could not perform search. Please check your connection.');
+                showError('error-network');
             }
         }
 
